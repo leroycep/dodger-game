@@ -4,7 +4,7 @@ usingnamespace @cImport({
     @cInclude("SDL2/SDL.h");
 });
 
-pub const Error = error {
+pub const Error = error{
     InitFailed,
     CouldntCreateWindow,
     CouldntCreateRenderer,
