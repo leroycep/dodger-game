@@ -22,11 +22,16 @@ pub fn main() !void {
 
     const tex = try sdl.loadTexture(ren, c"assets/texture.bmp");
     defer sdl.SDL_DestroyTexture(tex);
+    const guyTex = try sdl.loadTexture(ren, c"assets/guy.bmp");
+    defer sdl.SDL_DestroyTexture(tex);
 
     var i: i32 = 0;
     while (i < 3) {
         _ = sdl.SDL_RenderClear(ren);
         _ = sdl.SDL_RenderCopy(ren, tex, null, null);
+
+        sdl.renderTexture(ren, guyTex, 50, 50);
+
         _ = sdl.SDL_RenderPresent(ren);
 
         sdl.SDL_Delay(1000);
