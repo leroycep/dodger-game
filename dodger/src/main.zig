@@ -6,32 +6,21 @@ const SCREEN_HEIGHT = 480;
 
 pub fn main() !void {
     if (sdl.SDL_Init(sdl.SDL_INIT_VIDEO) != 0) {
-        return logSDLError(error.SdlInitFailed);
+        return sdl.logErr(error.InitFailed);
     }
     defer sdl.SDL_Quit();
 
-    const win = sdl.SDL_CreateWindow(c"Hello World!", 100, 100, 640, 480, sdl.SDL_WINDOW_SHOWN);
-    if (win == null) {
-        return logSDLError(error.CouldntCreateWindow);
-    }
+    const win = sdl.SDL_CreateWindow(c"Hello World!", 100, 100, 640, 480, sdl.SDL_WINDOW_SHOWN) orelse {
+        return sdl.logErr(error.CouldntCreateWindow);
+    };
     defer sdl.SDL_DestroyWindow(win);
 
-    const ren = sdl.SDL_CreateRenderer(win, -1, sdl.SDL_RENDERER_ACCELERATED | sdl.SDL_RENDERER_PRESENTVSYNC);
-    if (ren == null) {
-        return logSDLError(error.CouldntCreateRenderer);
-    }
+    const ren = sdl.SDL_CreateRenderer(win, -1, sdl.SDL_RENDERER_ACCELERATED | sdl.SDL_RENDERER_PRESENTVSYNC) orelse {
+        return sdl.logErr(error.CouldntCreateRenderer);
+    };
     defer sdl.SDL_DestroyRenderer(ren);
 
-    const bmp = sdl.SDL_LoadBMP_RW(sdl.SDL_RWFromFile(c"assets/texture.bmp", c"rb"), 1);
-    if (bmp == null) {
-        return logSDLError(error.CouldntLoadBMP);
-    }
-
-    const tex = sdl.SDL_CreateTextureFromSurface(ren, bmp);
-    sdl.SDL_FreeSurface(bmp);
-    if (tex == null) {
-        return logSDLError(error.CouldntCreateTexture);
-    }
+    const tex = try sdl.loadTexture(ren, c"assets/texture.bmp");
     defer sdl.SDL_DestroyTexture(tex);
 
     var i: i32 = 0;
@@ -46,7 +35,3 @@ pub fn main() !void {
     }
 }
 
-fn logSDLError(err: anyerror) !void {
-    std.debug.warn("{} error: {}", err, sdl.SDL_GetError());
-    return err;
-}
