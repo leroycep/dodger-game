@@ -17,6 +17,7 @@ in
       freetype
       python3
       expat
+      SDL2
       ];
     shellHook = ''
       export RUST_BACKTRACE=1
