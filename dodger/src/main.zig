@@ -28,8 +28,8 @@ pub fn main() !void {
     var i: i32 = 0;
     while (i < 3) {
         _ = sdl.SDL_RenderClear(ren);
-        _ = sdl.SDL_RenderCopy(ren, tex, null, null);
 
+        renderBackground(ren, tex);
         sdl.renderTexture(ren, guyTex, 50, 50);
 
         _ = sdl.SDL_RenderPresent(ren);
@@ -40,3 +40,20 @@ pub fn main() !void {
     }
 }
 
+fn renderBackground(ren: *sdl.SDL_Renderer, bgTile: *sdl.SDL_Texture) void {
+    var dst: sdl.SDL_Rect = undefined;
+
+    // Query the texture's size
+    _ = sdl.SDL_QueryTexture(bgTile, null, null, &dst.w, &dst.h);
+
+    dst.y = 0;
+
+    while (dst.y < SCREEN_HEIGHT) {
+        dst.x = 0;
+        while (dst.x < SCREEN_WIDTH) {
+            _ = sdl.SDL_RenderCopy(ren, bgTile, null, &dst);
+            dst.x += dst.w;
+        }
+        dst.y += dst.h;
+    }
+}
