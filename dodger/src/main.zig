@@ -29,18 +29,27 @@ pub fn main() !void {
     const guyTex = try sdl.loadTexture(ren, c"assets/guy.png");
     defer sdl.SDL_DestroyTexture(tex);
 
-    var i: i32 = 0;
-    while (i < 3) {
+    var quit = false;
+    var e: sdl.SDL_Event = undefined;
+    while (!quit) {
+        while (sdl.SDL_PollEvent(&e) != 0) {
+            if (e.type == sdl.SDL_QUIT) {
+                quit = true;
+            }
+            if (e.type == sdl.SDL_KEYDOWN) {
+                quit = true;
+            }
+            if (e.type == sdl.SDL_MOUSEBUTTONDOWN) {
+                quit = true;
+            }
+        }
+
         _ = sdl.SDL_RenderClear(ren);
 
         renderBackground(ren, tex);
         sdl.renderTexture(ren, guyTex, 50, 50);
 
         _ = sdl.SDL_RenderPresent(ren);
-
-        sdl.SDL_Delay(1000);
-
-        i += 1;
     }
 }
 
