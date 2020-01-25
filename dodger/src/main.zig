@@ -22,18 +22,13 @@ pub fn main() !void {
         return sdl.logErr(error.ImgInit);
     }
 
-    const tex = try sdl.loadTexture(ren, c"assets/texture.png");
-    defer sdl.SDL_DestroyTexture(tex);
-    const guyTex = try sdl.loadTexture(ren, c"assets/guy.png");
-    defer sdl.SDL_DestroyTexture(tex);
-
     var quit = false;
     var e: sdl.SDL_Event = undefined;
     const keys = sdl.SDL_GetKeyboardState(null);
     var game = Game{
         .textures = Textures{
-            .background = tex,
-            .guy = guyTex,
+            .background = try sdl.loadTexture(ren, c"assets/texture.png"),
+            .guy = try sdl.loadTexture(ren, c"assets/guy.png"),
         },
         .playerPos = sdl.SDL_Point{
             .x = 50,
@@ -46,6 +41,8 @@ pub fn main() !void {
             .right = @intCast(usize, @enumToInt(sdl.SDL_GetScancodeFromKey(sdl.SDLK_RIGHT))),
         },
     };
+    defer game.deinit();
+
     while (!quit) {
         while (sdl.SDL_PollEvent(&e) != 0) {
             if (e.type == sdl.SDL_QUIT) {
@@ -73,6 +70,11 @@ const InputMap = struct {
 const Textures = struct {
     background: *sdl.SDL_Texture,
     guy: *sdl.SDL_Texture,
+
+    fn destroy(self: *Textures) void {
+        sdl.SDL_DestroyTexture(self.background);
+        sdl.SDL_DestroyTexture(self.guy);
+    }
 };
 
 const Game = struct {
@@ -103,6 +105,10 @@ const Game = struct {
         sdl.renderTexture(ren, self.textures.guy, self.playerPos.x, self.playerPos.y);
 
         _ = sdl.SDL_RenderPresent(ren);
+    }
+
+    fn deinit(self: *Game) void {
+        self.textures.destroy();
     }
 };
 
