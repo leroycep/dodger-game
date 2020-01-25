@@ -41,3 +41,7 @@ pub fn renderTexture(ren: *SDL_Renderer, tex: *SDL_Texture, x: i32, y: i32) void
     // Render the texture to screen at the destination rectangle
     _ = SDL_RenderCopy(ren, tex, null, &dst);
 }
+
+pub fn scnFromKey(key: SDL_Keycode) usize {
+    return @intCast(usize, @enumToInt(SDL_GetScancodeFromKey(key)));
+}

@@ -98,10 +98,10 @@ const Game = struct {
             .y = 50,
         };
         game.inputMap = InputMap{
-            .up = @intCast(usize, @enumToInt(sdl.SDL_GetScancodeFromKey(sdl.SDLK_UP))),
-            .down = @intCast(usize, @enumToInt(sdl.SDL_GetScancodeFromKey(sdl.SDLK_DOWN))),
-            .left = @intCast(usize, @enumToInt(sdl.SDL_GetScancodeFromKey(sdl.SDLK_LEFT))),
-            .right = @intCast(usize, @enumToInt(sdl.SDL_GetScancodeFromKey(sdl.SDLK_RIGHT))),
+            .up = sdl.scnFromKey(sdl.SDLK_UP),
+            .down = sdl.scnFromKey(sdl.SDLK_DOWN),
+            .left = sdl.scnFromKey(sdl.SDLK_LEFT),
+            .right = sdl.scnFromKey(sdl.SDLK_RIGHT),
         };
         game.enemyBreeds = [_]EnemyBreed{
             EnemyBreed{
