@@ -2,13 +2,6 @@ const std = @import("std");
 const sdl = @import("sdl.zig");
 usingnamespace @import("constants.zig");
 
-const InputMap = struct {
-    up: usize,
-    down: usize,
-    left: usize,
-    right: usize,
-};
-
 pub fn main() !void {
     if (sdl.SDL_Init(sdl.SDL_INIT_VIDEO) != 0) {
         return sdl.logErr(error.InitFailed);
@@ -34,23 +27,23 @@ pub fn main() !void {
     const guyTex = try sdl.loadTexture(ren, c"assets/guy.png");
     defer sdl.SDL_DestroyTexture(tex);
 
-    const keys = sdl.SDL_GetKeyboardState(null);
-    const inputMap = InputMap{
-        .up = @intCast(usize, @enumToInt(sdl.SDL_GetScancodeFromKey(sdl.SDLK_UP))),
-        .down = @intCast(usize, @enumToInt(sdl.SDL_GetScancodeFromKey(sdl.SDLK_DOWN))),
-        .left = @intCast(usize, @enumToInt(sdl.SDL_GetScancodeFromKey(sdl.SDLK_LEFT))),
-        .right = @intCast(usize, @enumToInt(sdl.SDL_GetScancodeFromKey(sdl.SDLK_RIGHT))),
-    };
     var quit = false;
     var e: sdl.SDL_Event = undefined;
+    const keys = sdl.SDL_GetKeyboardState(null);
     var game = Game{
+        .textures = Textures{
+            .background = tex,
+            .guy = guyTex,
+        },
         .playerPos = sdl.SDL_Point{
             .x = 50,
             .y = 50,
         },
-        .textures = Textures{
-            .background = tex,
-            .guy = guyTex,
+        .inputMap = InputMap{
+            .up = @intCast(usize, @enumToInt(sdl.SDL_GetScancodeFromKey(sdl.SDLK_UP))),
+            .down = @intCast(usize, @enumToInt(sdl.SDL_GetScancodeFromKey(sdl.SDLK_DOWN))),
+            .left = @intCast(usize, @enumToInt(sdl.SDL_GetScancodeFromKey(sdl.SDLK_LEFT))),
+            .right = @intCast(usize, @enumToInt(sdl.SDL_GetScancodeFromKey(sdl.SDLK_RIGHT))),
         },
     };
     while (!quit) {
@@ -65,22 +58,17 @@ pub fn main() !void {
             }
         }
 
-        if (keys[inputMap.left] == 1) {
-            game.playerPos.x -= PLAYER_SPEED;
-        }
-        if (keys[inputMap.right] == 1) {
-            game.playerPos.x += PLAYER_SPEED;
-        }
-        if (keys[inputMap.up] == 1) {
-            game.playerPos.y -= PLAYER_SPEED;
-        }
-        if (keys[inputMap.down] == 1) {
-            game.playerPos.y += PLAYER_SPEED;
-        }
-
+        game.update(keys);
         game.render(ren);
     }
 }
+
+const InputMap = struct {
+    up: usize,
+    down: usize,
+    left: usize,
+    right: usize,
+};
 
 const Textures = struct {
     background: *sdl.SDL_Texture,
@@ -90,8 +78,25 @@ const Textures = struct {
 const Game = struct {
     textures: Textures,
     playerPos: sdl.SDL_Point,
+    inputMap: InputMap,
 
-    fn render(self: Game, ren: *sdl.SDL_Renderer) void {
+    fn update(self: *Game, keys: [*]const u8) void {
+        if (keys[self.inputMap.left] == 1) {
+            self.playerPos.x -= PLAYER_SPEED;
+        }
+        if (keys[self.inputMap.right] == 1) {
+            self.playerPos.x += PLAYER_SPEED;
+        }
+        if (keys[self.inputMap.up] == 1) {
+            self.playerPos.y -= PLAYER_SPEED;
+        }
+        if (keys[self.inputMap.down] == 1) {
+            self.playerPos.y += PLAYER_SPEED;
+        }
+
+    }
+
+    fn render(self: *Game, ren: *sdl.SDL_Renderer) void {
         _ = sdl.SDL_RenderClear(ren);
 
         renderBackground(ren, self.textures.background);
