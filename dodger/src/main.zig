@@ -62,6 +62,11 @@ pub fn main() !void {
             if (e.type == sdl.SDL_QUIT) {
                 quit = true;
             }
+            if (e.type == sdl.SDL_KEYDOWN) {
+                if (e.key.keysym.sym == sdl.SDLK_ESCAPE) {
+                    quit = true;
+                }
+            }
         }
 
         if (keys[inputMap.left] == 1) {
