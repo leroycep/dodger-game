@@ -24,7 +24,7 @@ pub fn main() !void {
         return sdl.logErr(error.ImgInit);
     }
 
-    const tex = try sdl.loadTexture(ren, c"assets/texture.bmp");
+    const tex = try sdl.loadTexture(ren, c"assets/texture.png");
     defer sdl.SDL_DestroyTexture(tex);
     const guyTex = try sdl.loadTexture(ren, c"assets/guy.png");
     defer sdl.SDL_DestroyTexture(tex);
