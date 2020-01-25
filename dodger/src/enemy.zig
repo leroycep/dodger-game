@@ -1,7 +1,7 @@
 const sdl = @import("sdl.zig");
 
 pub const EnemyBreed = struct {
-    texture: []const u8,
+    texture: *sdl.SDL_Texture,
 };
 
 pub const Enemy = struct {
