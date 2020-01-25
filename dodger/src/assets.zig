@@ -19,10 +19,14 @@ pub const Assets = struct {
         _ = try self.textures.put(name, try sdl.loadTexture(ren, filepath));
     }
 
+    pub fn tex(self: *Assets, name: []const u8) *sdl.SDL_Texture {
+        return self.textures.get(name).?.value;
+    }
+
     pub fn deinit(self: *Assets) void {
         var iter = self.textures.iterator();
-        while (iter.next()) |tex| {
-            sdl.SDL_DestroyTexture(tex.value);
+        while (iter.next()) |texture| {
+            sdl.SDL_DestroyTexture(texture.value);
         }
         self.textures.deinit();
         self.breeds.deinit();
@@ -34,5 +38,5 @@ pub fn initAssets(assets: *Assets, ren: *sdl.SDL_Renderer) !void {
     try assets.loadTexture(ren, "guy", c"assets/guy.png");
     try assets.loadTexture(ren, "badguy", c"assets/badguy.png");
 
-    _ = try assets.breeds.put("badguy", EnemyBreed{ .texture = assets.textures.get("badguy").?.value });
+    _ = try assets.breeds.put("badguy", EnemyBreed{ .texture = assets.tex("badguy") });
 }

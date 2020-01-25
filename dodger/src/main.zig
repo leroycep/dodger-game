@@ -114,8 +114,8 @@ const Game = struct {
     fn render(self: *Game, ren: *sdl.SDL_Renderer, assets: *Assets) void {
         _ = sdl.SDL_RenderClear(ren);
 
-        renderBackground(ren, assets.textures.get("background").?.value);
-        sdl.renderTexture(ren, assets.textures.get("guy").?.value, self.playerPos.x, self.playerPos.y);
+        renderBackground(ren, assets.tex("background"));
+        sdl.renderTexture(ren, assets.tex("guy"), self.playerPos.x, self.playerPos.y);
         for (self.enemies.toSlice()) |*enemy| {
             sdl.renderTexture(ren, enemy.breed.texture, enemy.pos.x, enemy.pos.y);
         }
