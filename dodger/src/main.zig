@@ -26,7 +26,7 @@ pub fn main() !void {
 
     const tex = try sdl.loadTexture(ren, c"assets/texture.bmp");
     defer sdl.SDL_DestroyTexture(tex);
-    const guyTex = try sdl.loadTexture(ren, c"assets/guy.bmp");
+    const guyTex = try sdl.loadTexture(ren, c"assets/guy.png");
     defer sdl.SDL_DestroyTexture(tex);
 
     var i: i32 = 0;
