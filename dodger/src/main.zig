@@ -3,6 +3,7 @@ const sdl = @import("sdl.zig");
 usingnamespace @import("constants.zig");
 const ArrayList = std.ArrayList;
 const Allocator = std.mem.Allocator;
+const StringHashMap = std.StringHashMap;
 
 pub fn main() !void {
     if (sdl.SDL_Init(sdl.SDL_INIT_VIDEO) != 0) {
@@ -26,6 +27,11 @@ pub fn main() !void {
 
     const allocator = std.heap.direct_allocator;
 
+    const assets = &Assets.init(allocator);
+    try assets.loadTexture(ren, "background", c"assets/texture.png");
+    try assets.loadTexture(ren, "guy", c"assets/guy.png");
+    try assets.loadTexture(ren, "badguy", c"assets/badguy.png");
+
     var quit = false;
     var e: sdl.SDL_Event = undefined;
     const keys = sdl.SDL_GetKeyboardState(null);
@@ -45,9 +51,30 @@ pub fn main() !void {
         }
 
         game.update(keys);
-        game.render(ren);
+        game.render(ren, assets);
     }
 }
+
+const Assets = struct {
+    textures: StringHashMap(*sdl.SDL_Texture),
+
+    fn init(allocator: *Allocator) Assets {
+        return Assets{
+            .textures = StringHashMap(*sdl.SDL_Texture).init(allocator),
+        };
+    }
+
+    fn loadTexture(self: *Assets, ren: *sdl.SDL_Renderer, name: []const u8, filepath: [*]const u8) !void {
+        _ = try self.textures.put(name, try sdl.loadTexture(ren, filepath));
+    }
+
+    fn deinit(self: *Assets) void {
+        for (self.textures.iterator()) |tex| {
+            sdl.SDL_DestroyTexture(tex);
+        }
+        self.textures.deinit();
+    }
+};
 
 const InputMap = struct {
     up: usize,
@@ -56,20 +83,8 @@ const InputMap = struct {
     right: usize,
 };
 
-const Textures = struct {
-    background: *sdl.SDL_Texture,
-    guy: *sdl.SDL_Texture,
-    badguy: *sdl.SDL_Texture,
-
-    fn destroy(self: *Textures) void {
-        sdl.SDL_DestroyTexture(self.background);
-        sdl.SDL_DestroyTexture(self.guy);
-        sdl.SDL_DestroyTexture(self.badguy);
-    }
-};
-
 const EnemyBreed = struct {
-    texture: *sdl.SDL_Texture,
+    texture: []const u8,
 };
 
 const Enemy = struct {
@@ -79,7 +94,6 @@ const Enemy = struct {
 
 const Game = struct {
     allocator: *Allocator,
-    textures: Textures,
     playerPos: sdl.SDL_Point,
     inputMap: InputMap,
     enemyBreeds: [1]EnemyBreed,
@@ -87,11 +101,6 @@ const Game = struct {
 
     fn init(allocator: *Allocator, ren: *sdl.SDL_Renderer) !*Game {
         var game = try allocator.create(Game);
-        game.textures = Textures{
-            .background = try sdl.loadTexture(ren, c"assets/texture.png"),
-            .guy = try sdl.loadTexture(ren, c"assets/guy.png"),
-            .badguy = try sdl.loadTexture(ren, c"assets/badguy.png"),
-        };
         game.allocator = allocator;
         game.playerPos = sdl.SDL_Point{
             .x = 50,
@@ -105,7 +114,7 @@ const Game = struct {
         };
         game.enemyBreeds = [_]EnemyBreed{
             EnemyBreed{
-                .texture = game.textures.badguy,
+                .texture = "badguy",
             },
         };
         game.enemies = ArrayList(Enemy).init(allocator);
@@ -135,20 +144,26 @@ const Game = struct {
         }
     }
 
-    fn render(self: *Game, ren: *sdl.SDL_Renderer) void {
+    fn render(self: *Game, ren: *sdl.SDL_Renderer, assets: *Assets) void {
         _ = sdl.SDL_RenderClear(ren);
 
-        renderBackground(ren, self.textures.background);
-        sdl.renderTexture(ren, self.textures.guy, self.playerPos.x, self.playerPos.y);
+        if (assets.textures.get("background")) |tex| {
+            renderBackground(ren, tex.value);
+        }
+        if (assets.textures.get("guy")) |tex| {
+            sdl.renderTexture(ren, tex.value, self.playerPos.x, self.playerPos.y);
+        }
         for (self.enemies.toSlice()) |*enemy| {
-            sdl.renderTexture(ren, enemy.breed.texture, enemy.pos.x, enemy.pos.y);
+            if (assets.textures.get(enemy.breed.texture)) |tex| {
+                sdl.renderTexture(ren, tex.value, enemy.pos.x, enemy.pos.y);
+            }
         }
 
         _ = sdl.SDL_RenderPresent(ren);
     }
 
     fn deinit(self: *Game) void {
-        self.textures.destroy();
+        self.enemies.deinit();
     }
 };
 
