@@ -39,7 +39,7 @@ pub fn main() !void {
     defer sdl.SDL_DestroyTexture(tex);
 
     const keys = sdl.SDL_GetKeyboardState(null);
-    const inputMap = InputMap {
+    const inputMap = InputMap{
         .up = @intCast(usize, @enumToInt(sdl.SDL_GetScancodeFromKey(sdl.SDLK_UP))),
         .down = @intCast(usize, @enumToInt(sdl.SDL_GetScancodeFromKey(sdl.SDLK_DOWN))),
         .left = @intCast(usize, @enumToInt(sdl.SDL_GetScancodeFromKey(sdl.SDLK_LEFT))),
@@ -47,9 +47,15 @@ pub fn main() !void {
     };
     var quit = false;
     var e: sdl.SDL_Event = undefined;
-    var pos = sdl.SDL_Point {
-        .x = 50,
-        .y = 50,
+    var game = Game{
+        .player_pos = sdl.SDL_Point{
+            .x = 50,
+            .y = 50,
+        },
+        .textures = Textures{
+            .background = tex,
+            .guy = guyTex,
+        },
     };
     while (!quit) {
         while (sdl.SDL_PollEvent(&e) != 0) {
@@ -59,26 +65,40 @@ pub fn main() !void {
         }
 
         if (keys[inputMap.left] == 1) {
-            pos.x -= PLAYER_SPEED;
+            game.player_pos.x -= PLAYER_SPEED;
         }
         if (keys[inputMap.right] == 1) {
-            pos.x += PLAYER_SPEED;
+            game.player_pos.x += PLAYER_SPEED;
         }
         if (keys[inputMap.up] == 1) {
-            pos.y -= PLAYER_SPEED;
+            game.player_pos.y -= PLAYER_SPEED;
         }
         if (keys[inputMap.down] == 1) {
-            pos.y += PLAYER_SPEED;
+            game.player_pos.y += PLAYER_SPEED;
         }
 
+        game.render(ren);
+    }
+}
+
+const Textures = struct {
+    background: *sdl.SDL_Texture,
+    guy: *sdl.SDL_Texture,
+};
+
+const Game = struct {
+    textures: Textures,
+    player_pos: sdl.SDL_Point,
+
+    fn render(self: Game, ren: *sdl.SDL_Renderer) void {
         _ = sdl.SDL_RenderClear(ren);
 
-        renderBackground(ren, tex);
-        sdl.renderTexture(ren, guyTex, pos.x, pos.y);
+        renderBackground(ren, self.textures.background);
+        sdl.renderTexture(ren, self.textures.guy, self.player_pos.x, self.player_pos.y);
 
         _ = sdl.SDL_RenderPresent(ren);
     }
-}
+};
 
 fn renderBackground(ren: *sdl.SDL_Renderer, bgTile: *sdl.SDL_Texture) void {
     var dst: sdl.SDL_Rect = undefined;
