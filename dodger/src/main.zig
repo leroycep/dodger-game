@@ -5,6 +5,8 @@ const ArrayList = std.ArrayList;
 const Allocator = std.mem.Allocator;
 const assets_ = @import("assets.zig");
 const Assets = assets_.Assets;
+const Enemy = @import("enemy.zig").Enemy;
+const EnemyBreed = @import("enemy.zig").EnemyBreed;
 
 pub fn main() !void {
     if (sdl.SDL_Init(sdl.SDL_INIT_VIDEO) != 0) {
@@ -35,7 +37,8 @@ pub fn main() !void {
     var quit = false;
     var e: sdl.SDL_Event = undefined;
     const keys = sdl.SDL_GetKeyboardState(null);
-    var game = try Game.init(allocator, ren);
+
+    var game = try Game.init(allocator, ren, assets);
     defer game.deinit();
 
     while (!quit) {
@@ -50,7 +53,7 @@ pub fn main() !void {
             }
         }
 
-        game.update(keys);
+        game.update(keys, assets);
         game.render(ren, assets);
     }
 }
@@ -62,23 +65,13 @@ const InputMap = struct {
     right: usize,
 };
 
-const EnemyBreed = struct {
-    texture: []const u8,
-};
-
-const Enemy = struct {
-    breed: *EnemyBreed,
-    pos: sdl.SDL_Point,
-};
-
 const Game = struct {
     allocator: *Allocator,
     playerPos: sdl.SDL_Point,
     inputMap: InputMap,
-    enemyBreeds: [1]EnemyBreed,
     enemies: ArrayList(Enemy),
 
-    fn init(allocator: *Allocator, ren: *sdl.SDL_Renderer) !*Game {
+    fn init(allocator: *Allocator, ren: *sdl.SDL_Renderer, assets: *Assets) !*Game {
         var game = try allocator.create(Game);
         game.allocator = allocator;
         game.playerPos = sdl.SDL_Point{
@@ -91,20 +84,15 @@ const Game = struct {
             .left = sdl.scnFromKey(sdl.SDLK_LEFT),
             .right = sdl.scnFromKey(sdl.SDLK_RIGHT),
         };
-        game.enemyBreeds = [_]EnemyBreed{
-            EnemyBreed{
-                .texture = "badguy",
-            },
-        };
         game.enemies = ArrayList(Enemy).init(allocator);
         try game.enemies.append(Enemy{
-            .breed = &(game.enemyBreeds[0]),
+            .breed = &assets.breeds.get("badguy").?.value,
             .pos = point(100, 0),
         });
         return game;
     }
 
-    fn update(self: *Game, keys: [*]const u8) void {
+    fn update(self: *Game, keys: [*]const u8, assets: *Assets) void {
         if (keys[self.inputMap.left] == 1) {
             self.playerPos.x -= PLAYER_SPEED;
         }
