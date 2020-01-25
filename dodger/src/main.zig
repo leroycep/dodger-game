@@ -1,10 +1,6 @@
 const std = @import("std");
 const sdl = @import("sdl.zig");
-
-const SCREEN_WIDTH = 640;
-const SCREEN_HEIGHT = 480;
-
-const PLAYER_SPEED = 4;
+usingnamespace @import("constants.zig");
 
 const InputMap = struct {
     up: usize,
