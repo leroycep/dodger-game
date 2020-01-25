@@ -2,6 +2,7 @@ const std = @import("std");
 
 usingnamespace @cImport({
     @cInclude("SDL2/SDL.h");
+    @cInclude("SDL_image.h");
 });
 
 pub const Error = error{
@@ -10,6 +11,7 @@ pub const Error = error{
     CouldntCreateRenderer,
     CouldntLoadBMP,
     CouldntCreateTexture,
+    ImgInit,
 };
 
 pub fn logErr(err: Error) Error {
@@ -18,13 +20,7 @@ pub fn logErr(err: Error) Error {
 }
 
 pub fn loadTexture(ren: *SDL_Renderer, file: [*]const u8) Error!*SDL_Texture {
-    const bmp = SDL_LoadBMP_RW(SDL_RWFromFile(file, c"rb"), 1);
-    if (bmp == null) {
-        return logErr(error.CouldntLoadBMP);
-    }
-    defer SDL_FreeSurface(bmp);
-
-    const texture = SDL_CreateTextureFromSurface(ren, bmp) orelse {
+    const texture = IMG_LoadTexture(ren, file) orelse {
         return logErr(error.CouldntCreateTexture);
     };
 

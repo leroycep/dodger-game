@@ -7,6 +7,7 @@ pub fn build(b: *Builder) void {
     const exe = b.addExecutable("dodger", "src/main.zig");
     exe.setBuildMode(mode);
     exe.linkSystemLibrary("SDL2");
+    exe.linkSystemLibrary("SDL2_image");
     exe.linkSystemLibrary("c");
 
     b.default_step.dependOn(&exe.step);

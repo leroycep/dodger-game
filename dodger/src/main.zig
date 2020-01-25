@@ -20,6 +20,10 @@ pub fn main() !void {
     };
     defer sdl.SDL_DestroyRenderer(ren);
 
+    if ((sdl.IMG_Init(sdl.IMG_INIT_PNG) & sdl.IMG_INIT_PNG) != sdl.IMG_INIT_PNG) {
+        return sdl.logErr(error.ImgInit);
+    }
+
     const tex = try sdl.loadTexture(ren, c"assets/texture.bmp");
     defer sdl.SDL_DestroyTexture(tex);
     const guyTex = try sdl.loadTexture(ren, c"assets/guy.bmp");
