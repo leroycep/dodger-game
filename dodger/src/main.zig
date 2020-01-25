@@ -4,6 +4,15 @@ const sdl = @import("sdl.zig");
 const SCREEN_WIDTH = 640;
 const SCREEN_HEIGHT = 480;
 
+const PLAYER_SPEED = 4;
+
+const InputMap = struct {
+    up: usize,
+    down: usize,
+    left: usize,
+    right: usize,
+};
+
 pub fn main() !void {
     if (sdl.SDL_Init(sdl.SDL_INIT_VIDEO) != 0) {
         return sdl.logErr(error.InitFailed);
@@ -29,25 +38,43 @@ pub fn main() !void {
     const guyTex = try sdl.loadTexture(ren, c"assets/guy.png");
     defer sdl.SDL_DestroyTexture(tex);
 
+    const keys = sdl.SDL_GetKeyboardState(null);
+    const inputMap = InputMap {
+        .up = @intCast(usize, @enumToInt(sdl.SDL_GetScancodeFromKey(sdl.SDLK_UP))),
+        .down = @intCast(usize, @enumToInt(sdl.SDL_GetScancodeFromKey(sdl.SDLK_DOWN))),
+        .left = @intCast(usize, @enumToInt(sdl.SDL_GetScancodeFromKey(sdl.SDLK_LEFT))),
+        .right = @intCast(usize, @enumToInt(sdl.SDL_GetScancodeFromKey(sdl.SDLK_RIGHT))),
+    };
     var quit = false;
     var e: sdl.SDL_Event = undefined;
+    var pos = sdl.SDL_Point {
+        .x = 50,
+        .y = 50,
+    };
     while (!quit) {
         while (sdl.SDL_PollEvent(&e) != 0) {
             if (e.type == sdl.SDL_QUIT) {
                 quit = true;
             }
-            if (e.type == sdl.SDL_KEYDOWN) {
-                quit = true;
-            }
-            if (e.type == sdl.SDL_MOUSEBUTTONDOWN) {
-                quit = true;
-            }
+        }
+
+        if (keys[inputMap.left] == 1) {
+            pos.x -= PLAYER_SPEED;
+        }
+        if (keys[inputMap.right] == 1) {
+            pos.x += PLAYER_SPEED;
+        }
+        if (keys[inputMap.up] == 1) {
+            pos.y -= PLAYER_SPEED;
+        }
+        if (keys[inputMap.down] == 1) {
+            pos.y += PLAYER_SPEED;
         }
 
         _ = sdl.SDL_RenderClear(ren);
 
         renderBackground(ren, tex);
-        sdl.renderTexture(ren, guyTex, 50, 50);
+        sdl.renderTexture(ren, guyTex, pos.x, pos.y);
 
         _ = sdl.SDL_RenderPresent(ren);
     }
