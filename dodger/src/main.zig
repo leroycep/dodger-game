@@ -48,7 +48,7 @@ pub fn main() !void {
     var quit = false;
     var e: sdl.SDL_Event = undefined;
     var game = Game{
-        .player_pos = sdl.SDL_Point{
+        .playerPos = sdl.SDL_Point{
             .x = 50,
             .y = 50,
         },
@@ -70,16 +70,16 @@ pub fn main() !void {
         }
 
         if (keys[inputMap.left] == 1) {
-            game.player_pos.x -= PLAYER_SPEED;
+            game.playerPos.x -= PLAYER_SPEED;
         }
         if (keys[inputMap.right] == 1) {
-            game.player_pos.x += PLAYER_SPEED;
+            game.playerPos.x += PLAYER_SPEED;
         }
         if (keys[inputMap.up] == 1) {
-            game.player_pos.y -= PLAYER_SPEED;
+            game.playerPos.y -= PLAYER_SPEED;
         }
         if (keys[inputMap.down] == 1) {
-            game.player_pos.y += PLAYER_SPEED;
+            game.playerPos.y += PLAYER_SPEED;
         }
 
         game.render(ren);
@@ -93,13 +93,13 @@ const Textures = struct {
 
 const Game = struct {
     textures: Textures,
-    player_pos: sdl.SDL_Point,
+    playerPos: sdl.SDL_Point,
 
     fn render(self: Game, ren: *sdl.SDL_Renderer) void {
         _ = sdl.SDL_RenderClear(ren);
 
         renderBackground(ren, self.textures.background);
-        sdl.renderTexture(ren, self.textures.guy, self.player_pos.x, self.player_pos.y);
+        sdl.renderTexture(ren, self.textures.guy, self.playerPos.x, self.playerPos.y);
 
         _ = sdl.SDL_RenderPresent(ren);
     }
