@@ -1,6 +1,8 @@
 const std = @import("std");
 const sdl = @import("sdl.zig");
 usingnamespace @import("constants.zig");
+const ArrayList = std.ArrayList;
+const Allocator = std.mem.Allocator;
 
 pub fn main() !void {
     if (sdl.SDL_Init(sdl.SDL_INIT_VIDEO) != 0) {
@@ -22,25 +24,12 @@ pub fn main() !void {
         return sdl.logErr(error.ImgInit);
     }
 
+    const allocator = std.heap.direct_allocator;
+
     var quit = false;
     var e: sdl.SDL_Event = undefined;
     const keys = sdl.SDL_GetKeyboardState(null);
-    var game = Game{
-        .textures = Textures{
-            .background = try sdl.loadTexture(ren, c"assets/texture.png"),
-            .guy = try sdl.loadTexture(ren, c"assets/guy.png"),
-        },
-        .playerPos = sdl.SDL_Point{
-            .x = 50,
-            .y = 50,
-        },
-        .inputMap = InputMap{
-            .up = @intCast(usize, @enumToInt(sdl.SDL_GetScancodeFromKey(sdl.SDLK_UP))),
-            .down = @intCast(usize, @enumToInt(sdl.SDL_GetScancodeFromKey(sdl.SDLK_DOWN))),
-            .left = @intCast(usize, @enumToInt(sdl.SDL_GetScancodeFromKey(sdl.SDLK_LEFT))),
-            .right = @intCast(usize, @enumToInt(sdl.SDL_GetScancodeFromKey(sdl.SDLK_RIGHT))),
-        },
-    };
+    var game = try Game.init(allocator, ren);
     defer game.deinit();
 
     while (!quit) {
@@ -70,17 +59,62 @@ const InputMap = struct {
 const Textures = struct {
     background: *sdl.SDL_Texture,
     guy: *sdl.SDL_Texture,
+    badguy: *sdl.SDL_Texture,
 
     fn destroy(self: *Textures) void {
         sdl.SDL_DestroyTexture(self.background);
         sdl.SDL_DestroyTexture(self.guy);
+        sdl.SDL_DestroyTexture(self.badguy);
     }
 };
 
+const EnemyBreed = struct {
+    texture: *sdl.SDL_Texture,
+};
+
+const Enemy = struct {
+    breed: *EnemyBreed,
+    pos: sdl.SDL_Point,
+};
+
 const Game = struct {
+    allocator: *Allocator,
     textures: Textures,
     playerPos: sdl.SDL_Point,
     inputMap: InputMap,
+    enemyBreeds: [1]EnemyBreed,
+    enemies: ArrayList(Enemy),
+
+    fn init(allocator: *Allocator, ren: *sdl.SDL_Renderer) !*Game {
+        var game = try allocator.create(Game);
+        game.textures = Textures{
+            .background = try sdl.loadTexture(ren, c"assets/texture.png"),
+            .guy = try sdl.loadTexture(ren, c"assets/guy.png"),
+            .badguy = try sdl.loadTexture(ren, c"assets/badguy.png"),
+        };
+        game.allocator = allocator;
+        game.playerPos = sdl.SDL_Point{
+            .x = 50,
+            .y = 50,
+        };
+        game.inputMap = InputMap{
+            .up = @intCast(usize, @enumToInt(sdl.SDL_GetScancodeFromKey(sdl.SDLK_UP))),
+            .down = @intCast(usize, @enumToInt(sdl.SDL_GetScancodeFromKey(sdl.SDLK_DOWN))),
+            .left = @intCast(usize, @enumToInt(sdl.SDL_GetScancodeFromKey(sdl.SDLK_LEFT))),
+            .right = @intCast(usize, @enumToInt(sdl.SDL_GetScancodeFromKey(sdl.SDLK_RIGHT))),
+        };
+        game.enemyBreeds = [_]EnemyBreed{
+            EnemyBreed{
+                .texture = game.textures.badguy,
+            },
+        };
+        game.enemies = ArrayList(Enemy).init(allocator);
+        try game.enemies.append(Enemy{
+            .breed = &(game.enemyBreeds[0]),
+            .pos = point(100, 0),
+        });
+        return game;
+    }
 
     fn update(self: *Game, keys: [*]const u8) void {
         if (keys[self.inputMap.left] == 1) {
@@ -96,6 +130,9 @@ const Game = struct {
             self.playerPos.y += PLAYER_SPEED;
         }
 
+        for (self.enemies.toSlice()) |*enemy| {
+            enemy.pos.y += 1;
+        }
     }
 
     fn render(self: *Game, ren: *sdl.SDL_Renderer) void {
@@ -103,6 +140,9 @@ const Game = struct {
 
         renderBackground(ren, self.textures.background);
         sdl.renderTexture(ren, self.textures.guy, self.playerPos.x, self.playerPos.y);
+        for (self.enemies.toSlice()) |*enemy| {
+            sdl.renderTexture(ren, enemy.breed.texture, enemy.pos.x, enemy.pos.y);
+        }
 
         _ = sdl.SDL_RenderPresent(ren);
     }
@@ -128,4 +168,11 @@ fn renderBackground(ren: *sdl.SDL_Renderer, bgTile: *sdl.SDL_Texture) void {
         }
         dst.y += dst.h;
     }
+}
+
+fn point(x: c_int, y: c_int) sdl.SDL_Point {
+    return sdl.SDL_Point{
+        .x = x,
+        .y = y,
+    };
 }
