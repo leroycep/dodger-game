@@ -3,7 +3,8 @@ const sdl = @import("sdl.zig");
 usingnamespace @import("constants.zig");
 const ArrayList = std.ArrayList;
 const Allocator = std.mem.Allocator;
-const StringHashMap = std.StringHashMap;
+const assets_ = @import("assets.zig");
+const Assets = assets_.Assets;
 
 pub fn main() !void {
     if (sdl.SDL_Init(sdl.SDL_INIT_VIDEO) != 0) {
@@ -28,9 +29,8 @@ pub fn main() !void {
     const allocator = std.heap.direct_allocator;
 
     const assets = &Assets.init(allocator);
-    try assets.loadTexture(ren, "background", c"assets/texture.png");
-    try assets.loadTexture(ren, "guy", c"assets/guy.png");
-    try assets.loadTexture(ren, "badguy", c"assets/badguy.png");
+    try assets_.initAssets(assets, ren);
+    defer assets.deinit();
 
     var quit = false;
     var e: sdl.SDL_Event = undefined;
@@ -54,27 +54,6 @@ pub fn main() !void {
         game.render(ren, assets);
     }
 }
-
-const Assets = struct {
-    textures: StringHashMap(*sdl.SDL_Texture),
-
-    fn init(allocator: *Allocator) Assets {
-        return Assets{
-            .textures = StringHashMap(*sdl.SDL_Texture).init(allocator),
-        };
-    }
-
-    fn loadTexture(self: *Assets, ren: *sdl.SDL_Renderer, name: []const u8, filepath: [*]const u8) !void {
-        _ = try self.textures.put(name, try sdl.loadTexture(ren, filepath));
-    }
-
-    fn deinit(self: *Assets) void {
-        for (self.textures.iterator()) |tex| {
-            sdl.SDL_DestroyTexture(tex);
-        }
-        self.textures.deinit();
-    }
-};
 
 const InputMap = struct {
     up: usize,

@@ -1,0 +1,32 @@
+const std = @import("std");
+const Allocator = std.mem.Allocator;
+const StringHashMap = std.StringHashMap;
+const sdl = @import("sdl.zig");
+
+pub const Assets = struct {
+    textures: StringHashMap(*sdl.SDL_Texture),
+
+    pub fn init(allocator: *Allocator) Assets {
+        return Assets{
+            .textures = StringHashMap(*sdl.SDL_Texture).init(allocator),
+        };
+    }
+
+    pub fn loadTexture(self: *Assets, ren: *sdl.SDL_Renderer, name: []const u8, filepath: [*]const u8) !void {
+        _ = try self.textures.put(name, try sdl.loadTexture(ren, filepath));
+    }
+
+    pub fn deinit(self: *Assets) void {
+        var iter = self.textures.iterator();
+        while (iter.next()) |tex| {
+            sdl.SDL_DestroyTexture(tex.value);
+        }
+        self.textures.deinit();
+    }
+};
+
+pub fn initAssets(assets: *Assets, ren: *sdl.SDL_Renderer) !void {
+    try assets.loadTexture(ren, "background", c"assets/texture.png");
+    try assets.loadTexture(ren, "guy", c"assets/guy.png");
+    try assets.loadTexture(ren, "badguy", c"assets/badguy.png");
+}
