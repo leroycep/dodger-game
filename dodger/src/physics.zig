@@ -43,8 +43,8 @@ pub const PhysicsComponent = struct {
 
     pub fn applyGravity(self: *PhysicsComponent) void {
         self.vel.y += constants.GRAVITY;
-        if (self.vel.y > MAX_VELOCITY) {
-            self.vel.y = MAX_VELOCITY;
+        if (self.vel.y > constants.MAX_VELOCITY) {
+            self.vel.y = constants.MAX_VELOCITY;
         }
     }
 

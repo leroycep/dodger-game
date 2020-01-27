@@ -110,6 +110,7 @@ const Game = struct {
         } else {
             self.playerPhysics.vel.x = 0;
         }
+        self.playerPhysics.applyGravity();
         self.playerPhysics.update(&self.world);
         // Player won't need up/down input. May need a jump button
         // if (keys[self.inputMap.up] == 1) {
