@@ -118,7 +118,7 @@ const Game = struct {
         if (self.enemies.toSlice().len < self.maxEnemies) {
             self.enemies.append(Enemy{
                 .breed = &assets.breeds.get("badguy").?.value,
-                .physics = Vec2.init(0, SCREEN_HEIGHT + 32), // Start the enemy below the screen, so it will be picked up by the loop
+                .physics = physics.PhysicsComponent.init(0.0, @intToFloat(f32, SCREEN_HEIGHT + 32)), // Start the enemy below the screen, so it will be picked up by the loop
             }) catch |_| {
                 // Do nothing
             };
