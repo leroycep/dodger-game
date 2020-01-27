@@ -48,6 +48,10 @@ pub const PhysicsComponent = struct {
         }
     }
 
+    pub fn isOnFloor(self: *PhysicsComponent, world: *World) bool {
+        return (self.pos.y + self.size.y / 2 == world.floor);
+    }
+
     pub fn update(self: *PhysicsComponent, world: *World) void {
         var nextX = self.pos.x;
         nextX += self.vel.x;

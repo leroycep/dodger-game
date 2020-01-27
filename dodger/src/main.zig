@@ -130,18 +130,18 @@ const Game = struct {
         }
 
         for (self.enemies.toSlice()) |*enemy, i| {
-            enemy.physics.applyGravity();
-            enemy.physics.update(&self.world);
-
             if (physics.distance(enemy.physics.pos, self.playerPhysics.pos) < 32) {
                 std.debug.warn("You're dead!\n");
             }
 
-            if (enemy.physics.pos.y > SCREEN_HEIGHT) {
+            if (enemy.physics.isOnFloor(&self.world)) {
                 enemy.physics.pos.y = ENEMY_START_Y;
                 enemy.physics.pos.x = self.rand.random.float(f32) * (SCREEN_WIDTH - 32) + 32;
                 enemy.physics.vel = Vec2.zero();
             }
+
+            enemy.physics.applyGravity();
+            enemy.physics.update(&self.world);
         }
     }
 
