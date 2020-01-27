@@ -15,7 +15,7 @@ pub fn main() !void {
     }
     defer sdl.SDL_Quit();
 
-    const win = sdl.SDL_CreateWindow(c"Hello World!", 100, 100, 640, 480, sdl.SDL_WINDOW_SHOWN) orelse {
+    const win = sdl.SDL_CreateWindow(c"Hello World!", 100, 100, SCREEN_WIDTH, SCREEN_HEIGHT, sdl.SDL_WINDOW_SHOWN) orelse {
         return sdl.logErr(error.CouldntCreateWindow);
     };
     defer sdl.SDL_DestroyWindow(win);
@@ -94,11 +94,7 @@ const Game = struct {
             .right = sdl.scnFromKey(sdl.SDLK_RIGHT),
         };
         game.enemies = ArrayList(Enemy).init(allocator);
-        try game.enemies.append(Enemy{
-            .breed = &assets.breeds.get("badguy").?.value,
-            .pos = point(@bitCast(c_int, (game.rand.random.int(u32) % SCREEN_WIDTH)), 0),
-        });
-        game.maxEnemies = 5;
+        game.maxEnemies = INITIAL_MAX_ENEMIES;
 
         return game;
     }
@@ -121,21 +117,21 @@ const Game = struct {
         if (self.enemies.toSlice().len < self.maxEnemies) {
             self.enemies.append(Enemy{
                 .breed = &assets.breeds.get("badguy").?.value,
-                .pos = point(0, SCREEN_HEIGHT + 32),
+                .pos = point(0, SCREEN_HEIGHT + 32), // Start the enemy below the screen, so it will be picked up by the loop
             }) catch |_| {
                 // Do nothing
             };
         }
 
         for (self.enemies.toSlice()) |*enemy, i| {
-            enemy.pos.y += 1;
+            enemy.pos.y += ENEMY_SPEED;
 
             if (util.distance(enemy.pos, self.playerPos) < 32) {
                 std.debug.warn("You're dead!\n");
             }
 
             if (enemy.pos.y > SCREEN_HEIGHT) {
-                enemy.pos.y = -32;
+                enemy.pos.y = ENEMY_START_Y;
                 enemy.pos.x = (self.rand.random.intRangeAtMostBiased(c_int, 32, SCREEN_WIDTH - 32));
             }
         }
