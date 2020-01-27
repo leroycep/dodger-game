@@ -46,4 +46,9 @@ pub const PhysicsComponent = struct {
             self.vel.y = MAX_VELOCITY;
         }
     }
+
+    pub fn update(self: *PhysicsComponent) void {
+        self.pos.x += self.vel.x;
+        self.pos.y += self.vel.y;
+    }
 };

@@ -102,11 +102,12 @@ const Game = struct {
         var goingRight = keys[self.inputMap.right] == 1 and self.playerPhysics.pos.x < SCREEN_WIDTH - 16;
         if (goingLeft and !goingRight) {
             self.playerPhysics.vel.x = -PLAYER_SPEED;
-        } else if (goingRight) {
+        } else if (goingRight and !goingLeft) {
             self.playerPhysics.vel.x = PLAYER_SPEED;
         } else {
             self.playerPhysics.vel.x = 0;
         }
+        self.playerPhysics.update();
         // Player won't need up/down input. May need a jump button
         // if (keys[self.inputMap.up] == 1) {
         //     self.playerPos.y -= PLAYER_SPEED;
