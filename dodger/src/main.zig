@@ -7,6 +7,7 @@ const assets_ = @import("assets.zig");
 const Assets = assets_.Assets;
 const Enemy = @import("enemy.zig").Enemy;
 const EnemyBreed = @import("enemy.zig").EnemyBreed;
+const util = @import("util.zig");
 
 pub fn main() !void {
     if (sdl.SDL_Init(sdl.SDL_INIT_VIDEO) != 0) {
@@ -103,10 +104,10 @@ const Game = struct {
     }
 
     fn update(self: *Game, keys: [*]const u8, assets: *Assets) void {
-        if (keys[self.inputMap.left] == 1) {
+        if (keys[self.inputMap.left] == 1 and self.playerPos.x > 16) {
             self.playerPos.x -= PLAYER_SPEED;
         }
-        if (keys[self.inputMap.right] == 1) {
+        if (keys[self.inputMap.right] == 1 and self.playerPos.x < SCREEN_WIDTH - 16) {
             self.playerPos.x += PLAYER_SPEED;
         }
         // Player won't need up/down input. May need a jump button
@@ -128,6 +129,11 @@ const Game = struct {
 
         for (self.enemies.toSlice()) |*enemy, i| {
             enemy.pos.y += 1;
+
+            if (util.distance(enemy.pos, self.playerPos) < 32) {
+                std.debug.warn("You're dead!\n");
+            }
+
             if (enemy.pos.y > SCREEN_HEIGHT) {
                 enemy.pos.y = -32;
                 enemy.pos.x = (self.rand.random.intRangeAtMostBiased(c_int, 32, SCREEN_WIDTH - 32));
