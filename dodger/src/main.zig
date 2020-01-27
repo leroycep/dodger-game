@@ -71,10 +71,16 @@ const Game = struct {
     inputMap: InputMap,
     enemies: ArrayList(Enemy),
     maxEnemies: usize,
-    // rand: Random,
+    rand: std.rand.DefaultPrng,
 
     fn init(allocator: *Allocator, ren: *sdl.SDL_Renderer, assets: *Assets) !*Game {
         var game = try allocator.create(Game);
+
+        var buf: [8]u8 = undefined;
+        try std.crypto.randomBytes(buf[0..]);
+        const seed = std.mem.readIntSliceLittle(u64, buf[0..8]);
+        game.rand = std.rand.DefaultPrng.init(seed);
+
         game.allocator = allocator;
         game.playerPos = sdl.SDL_Point{
             .x = SCREEN_WIDTH / 2,
@@ -89,16 +95,9 @@ const Game = struct {
         game.enemies = ArrayList(Enemy).init(allocator);
         try game.enemies.append(Enemy{
             .breed = &assets.breeds.get("badguy").?.value,
-            .pos = point(100, 0),
+            .pos = point(@bitCast(c_int, (game.rand.random.int(u32) % SCREEN_WIDTH)), 0),
         });
         game.maxEnemies = 5;
-
-        // var buf: [8]u8 = undefined;
-        // try std.crypto.randomBytes(buf[0..]);
-        // const seed = mem.readIntSliceLittle(u64, buf[0..8]);
-
-        // game.random = std.DefaultPrng.init(seed);
-        // const
 
         return game;
     }
@@ -118,20 +117,21 @@ const Game = struct {
         //     self.playerPos.y += PLAYER_SPEED;
         // }
 
+        if (self.enemies.toSlice().len < self.maxEnemies) {
+            self.enemies.append(Enemy{
+                .breed = &assets.breeds.get("badguy").?.value,
+                .pos = point(0, SCREEN_HEIGHT + 32),
+            }) catch |_| {
+                // Do nothing
+            };
+        }
+
         for (self.enemies.toSlice()) |*enemy, i| {
             enemy.pos.y += 1;
             if (enemy.pos.y > SCREEN_HEIGHT) {
                 enemy.pos.y = -32;
+                enemy.pos.x = (self.rand.random.intRangeAtMostBiased(c_int, 32, SCREEN_WIDTH - 32));
             }
-        }
-
-        if (self.enemies.toSlice().len < self.maxEnemies) {
-            self.enemies.append(Enemy{
-                .breed = &assets.breeds.get("badguy").?.value,
-                .pos = point(SCREEN_WIDTH / 2, 0),
-            }) catch |_| {
-                // Do nothing
-            };
         }
     }
 
