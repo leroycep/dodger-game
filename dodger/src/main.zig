@@ -137,14 +137,14 @@ const Game = struct {
             }
 
             if (enemy.physics.isOnFloor(&self.world)) {
-                enemy.ticksLeftOnFloor -= 1;
-
                 if (enemy.ticksLeftOnFloor == 0) {
                     enemy.physics.pos.y = ENEMY_START_Y;
                     enemy.physics.pos.x = self.rand.random.float(f32) * (SCREEN_WIDTH - 32) + 32;
                     enemy.physics.vel = Vec2.zero();
                     enemy.ticksLeftOnFloor = enemy.breed.ticksOnFloor;
                 }
+
+                enemy.ticksLeftOnFloor -= 1;
             }
 
             enemy.physics.applyGravity();
