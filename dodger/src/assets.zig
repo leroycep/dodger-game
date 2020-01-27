@@ -34,7 +34,7 @@ pub const Assets = struct {
 };
 
 pub fn initAssets(assets: *Assets, ren: *sdl.SDL_Renderer) !void {
-    try assets.loadTexture(ren, "background", c"assets/texture.png");
+    try assets.loadTexture(ren, "background", c"assets/background.png");
     try assets.loadTexture(ren, "guy", c"assets/guy.png");
     try assets.loadTexture(ren, "badguy", c"assets/badguy.png");
 
