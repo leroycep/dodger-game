@@ -130,7 +130,8 @@ const Game = struct {
         }
 
         for (self.enemies.toSlice()) |*enemy, i| {
-            enemy.physics.pos.y += ENEMY_SPEED;
+            enemy.physics.applyGravity();
+            enemy.physics.update(&self.world);
 
             if (physics.distance(enemy.physics.pos, self.playerPhysics.pos) < 32) {
                 std.debug.warn("You're dead!\n");
