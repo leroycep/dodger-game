@@ -53,15 +53,20 @@ pub const PhysicsComponent = struct {
         nextX += self.vel.x;
         var left = nextX - self.size.x / 2;
         var right = nextX + self.size.x / 2;
-        if (left > world.leftWall and right < world.rightWall) {
-            self.pos.x = nextX;
+        if (left < world.leftWall) {
+            nextX = world.leftWall + self.size.x / 2;
+        } else if (right > world.rightWall) {
+            nextX = world.rightWall - self.size.x / 2;
         }
+        self.pos.x = nextX;
 
         var nextY = self.pos.y;
         nextY += self.vel.y;
         var bottom = nextY + self.size.y / 2;
-        if (bottom < world.floor) {
-            self.pos.y = nextY;
+        if (bottom > world.floor) {
+            nextY = world.floor - self.size.y / 2;
+            self.vel.y = 0;
         }
+        self.pos.y = nextY;
     }
 };
