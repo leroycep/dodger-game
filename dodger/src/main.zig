@@ -75,8 +75,8 @@ const Game = struct {
         var game = try allocator.create(Game);
         game.allocator = allocator;
         game.playerPos = sdl.SDL_Point{
-            .x = 50,
-            .y = 50,
+            .x = SCREEN_WIDTH / 2,
+            .y = SCREEN_HEIGHT - 32,
         };
         game.inputMap = InputMap{
             .up = sdl.scnFromKey(sdl.SDLK_UP),
@@ -106,8 +106,22 @@ const Game = struct {
             self.playerPos.y += PLAYER_SPEED;
         }
 
-        for (self.enemies.toSlice()) |*enemy| {
+        var del_enemies = ArrayList(usize).init(self.allocator);
+        defer del_enemies.deinit();
+        for (self.enemies.toSlice()) |*enemy, i| {
             enemy.pos.y += 1;
+            if (enemy.pos.y > SCREEN_HEIGHT) {
+                del_enemies.append(i) catch unreachable;
+            }
+        }
+
+        var del = del_enemies.toSlice();
+        if (del.len > 0) {
+            var i = del.len - 1;
+            while (i > 0) {
+                _ = self.enemies.orderedRemove(del[i]);
+                i -= 1;
+            }
         }
     }
 
