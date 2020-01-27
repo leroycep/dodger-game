@@ -28,15 +28,15 @@ pub fn loadTexture(ren: *SDL_Renderer, file: [*]const u8) Error!*SDL_Texture {
 }
 
 /// Renders a texture with its center at the specified position
-pub fn renderTexture(ren: *SDL_Renderer, tex: *SDL_Texture, x: i32, y: i32) void {
+pub fn renderTexture(ren: *SDL_Renderer, tex: *SDL_Texture, x: f32, y: f32) void {
     // Setup destination rectangle to be at the right place
     var dst: SDL_Rect = undefined;
 
     // Query the texture's size
     _ = SDL_QueryTexture(tex, null, null, &dst.w, &dst.h);
 
-    dst.x = x - @divTrunc(dst.w, 2);
-    dst.y = y - @divTrunc(dst.h, 2);
+    dst.x = @floatToInt(c_int, x) - @divTrunc(dst.w, 2);
+    dst.y = @floatToInt(c_int, y) - @divTrunc(dst.h, 2);
 
     // Render the texture to screen at the destination rectangle
     _ = SDL_RenderCopy(ren, tex, null, &dst);

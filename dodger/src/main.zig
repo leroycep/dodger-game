@@ -7,7 +7,8 @@ const assets_ = @import("assets.zig");
 const Assets = assets_.Assets;
 const Enemy = @import("enemy.zig").Enemy;
 const EnemyBreed = @import("enemy.zig").EnemyBreed;
-const util = @import("util.zig");
+const physics = @import("physics.zig");
+const Vec2 = physics.Vec2;
 
 pub fn main() !void {
     if (sdl.SDL_Init(sdl.SDL_INIT_VIDEO) != 0) {
@@ -68,7 +69,7 @@ const InputMap = struct {
 
 const Game = struct {
     allocator: *Allocator,
-    playerPos: sdl.SDL_Point,
+    playerPhysics: physics.PhysicsComponent,
     inputMap: InputMap,
     enemies: ArrayList(Enemy),
     maxEnemies: usize,
@@ -83,10 +84,7 @@ const Game = struct {
         game.rand = std.rand.DefaultPrng.init(seed);
 
         game.allocator = allocator;
-        game.playerPos = sdl.SDL_Point{
-            .x = SCREEN_WIDTH / 2,
-            .y = SCREEN_HEIGHT - 32,
-        };
+        game.playerPhysics = physics.PhysicsComponent.init(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 32);
         game.inputMap = InputMap{
             .up = sdl.scnFromKey(sdl.SDLK_UP),
             .down = sdl.scnFromKey(sdl.SDLK_DOWN),
@@ -100,11 +98,14 @@ const Game = struct {
     }
 
     fn update(self: *Game, keys: [*]const u8, assets: *Assets) void {
-        if (keys[self.inputMap.left] == 1 and self.playerPos.x > 16) {
-            self.playerPos.x -= PLAYER_SPEED;
-        }
-        if (keys[self.inputMap.right] == 1 and self.playerPos.x < SCREEN_WIDTH - 16) {
-            self.playerPos.x += PLAYER_SPEED;
+        var goingLeft = keys[self.inputMap.left] == 1 and self.playerPhysics.pos.x > 16;
+        var goingRight = keys[self.inputMap.right] == 1 and self.playerPhysics.pos.x < SCREEN_WIDTH - 16;
+        if (goingLeft and !goingRight) {
+            self.playerPhysics.vel.x = -PLAYER_SPEED;
+        } else if (goingRight) {
+            self.playerPhysics.vel.x = PLAYER_SPEED;
+        } else {
+            self.playerPhysics.vel.x = 0;
         }
         // Player won't need up/down input. May need a jump button
         // if (keys[self.inputMap.up] == 1) {
@@ -117,22 +118,23 @@ const Game = struct {
         if (self.enemies.toSlice().len < self.maxEnemies) {
             self.enemies.append(Enemy{
                 .breed = &assets.breeds.get("badguy").?.value,
-                .pos = point(0, SCREEN_HEIGHT + 32), // Start the enemy below the screen, so it will be picked up by the loop
+                .physics = Vec2.init(0, SCREEN_HEIGHT + 32), // Start the enemy below the screen, so it will be picked up by the loop
             }) catch |_| {
                 // Do nothing
             };
         }
 
         for (self.enemies.toSlice()) |*enemy, i| {
-            enemy.pos.y += ENEMY_SPEED;
+            enemy.physics.pos.y += ENEMY_SPEED;
 
-            if (util.distance(enemy.pos, self.playerPos) < 32) {
+            if (physics.distance(enemy.physics.pos, self.playerPhysics.pos) < 32) {
                 std.debug.warn("You're dead!\n");
             }
 
-            if (enemy.pos.y > SCREEN_HEIGHT) {
-                enemy.pos.y = ENEMY_START_Y;
-                enemy.pos.x = (self.rand.random.intRangeAtMostBiased(c_int, 32, SCREEN_WIDTH - 32));
+            if (enemy.physics.pos.y > SCREEN_HEIGHT) {
+                enemy.physics.pos.y = ENEMY_START_Y;
+                enemy.physics.pos.x = self.rand.random.float(f32) * (SCREEN_WIDTH - 32) + 32;
+                enemy.physics.vel = Vec2.zero();
             }
         }
     }
@@ -141,9 +143,9 @@ const Game = struct {
         _ = sdl.SDL_RenderClear(ren);
 
         renderBackground(ren, assets.tex("background"));
-        sdl.renderTexture(ren, assets.tex("guy"), self.playerPos.x, self.playerPos.y);
+        sdl.renderTexture(ren, assets.tex("guy"), self.playerPhysics.pos.x, self.playerPhysics.pos.y);
         for (self.enemies.toSlice()) |*enemy| {
-            sdl.renderTexture(ren, enemy.breed.texture, enemy.pos.x, enemy.pos.y);
+            sdl.renderTexture(ren, enemy.breed.texture, enemy.physics.pos.x, enemy.physics.pos.y);
         }
 
         _ = sdl.SDL_RenderPresent(ren);

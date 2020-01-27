@@ -1,4 +1,5 @@
 const sdl = @import("sdl.zig");
+const PhysicsComponent = @import("physics.zig").PhysicsComponent;
 
 pub const EnemyBreed = struct {
     texture: *sdl.SDL_Texture,
@@ -6,7 +7,5 @@ pub const EnemyBreed = struct {
 
 pub const Enemy = struct {
     breed: *EnemyBreed,
-    pos: sdl.SDL_Point,
+    physics: PhysicsComponent,
 };
-
-
