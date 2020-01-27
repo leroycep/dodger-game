@@ -86,7 +86,7 @@ const Game = struct {
         game.rand = std.rand.DefaultPrng.init(seed);
 
         game.allocator = allocator;
-        game.playerPhysics = physics.PhysicsComponent.init(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 32);
+        game.playerPhysics = physics.PhysicsComponent.init(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 32, 32, 32);
         game.inputMap = InputMap{
             .up = sdl.scnFromKey(sdl.SDLK_UP),
             .down = sdl.scnFromKey(sdl.SDLK_DOWN),
@@ -123,7 +123,7 @@ const Game = struct {
         if (self.enemies.toSlice().len < self.maxEnemies) {
             self.enemies.append(Enemy{
                 .breed = &assets.breeds.get("badguy").?.value,
-                .physics = physics.PhysicsComponent.init(0.0, @intToFloat(f32, SCREEN_HEIGHT + 32)), // Start the enemy below the screen, so it will be picked up by the loop
+                .physics = physics.PhysicsComponent.init(0, SCREEN_HEIGHT + 32, 32, 32), // Start the enemy below the screen, so it will be picked up by the loop
             }) catch |_| {
                 // Do nothing
             };

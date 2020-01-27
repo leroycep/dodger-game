@@ -33,10 +33,10 @@ pub const PhysicsComponent = struct {
     size: Vec2,
     vel: Vec2,
 
-    pub fn init(x: f32, y: f32) PhysicsComponent {
+    pub fn init(x: f32, y: f32, w: f32, h: f32) PhysicsComponent {
         return PhysicsComponent{
             .pos = Vec2.init(x, y),
-            .size = Vec2.zero(),
+            .size = Vec2.init(w, h),
             .vel = Vec2.zero(),
         };
     }
