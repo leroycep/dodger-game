@@ -1,6 +1,7 @@
 const std = @import("std");
 const sdl = @import("sdl.zig");
 const constants = @import("constants.zig");
+const World = @import("world.zig").World;
 
 pub const Vec2 = struct {
     x: f32,
@@ -47,8 +48,20 @@ pub const PhysicsComponent = struct {
         }
     }
 
-    pub fn update(self: *PhysicsComponent) void {
-        self.pos.x += self.vel.x;
-        self.pos.y += self.vel.y;
+    pub fn update(self: *PhysicsComponent, world: *World) void {
+        var nextX = self.pos.x;
+        nextX += self.vel.x;
+        var left = nextX - self.size.x / 2;
+        var right = nextX + self.size.x / 2;
+        if (left > world.leftWall and right < world.rightWall) {
+            self.pos.x = nextX;
+        }
+
+        var nextY = self.pos.y;
+        nextY += self.vel.y;
+        var bottom = nextY + self.size.y / 2;
+        if (bottom < world.floor) {
+            self.pos.y = nextY;
+        }
     }
 };

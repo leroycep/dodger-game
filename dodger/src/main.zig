@@ -9,6 +9,7 @@ const Enemy = @import("enemy.zig").Enemy;
 const EnemyBreed = @import("enemy.zig").EnemyBreed;
 const physics = @import("physics.zig");
 const Vec2 = physics.Vec2;
+const World = @import("world.zig").World;
 
 pub fn main() !void {
     if (sdl.SDL_Init(sdl.SDL_INIT_VIDEO) != 0) {
@@ -73,6 +74,7 @@ const Game = struct {
     inputMap: InputMap,
     enemies: ArrayList(Enemy),
     maxEnemies: usize,
+    world: World,
     rand: std.rand.DefaultPrng,
 
     fn init(allocator: *Allocator, ren: *sdl.SDL_Renderer, assets: *Assets) !*Game {
@@ -93,6 +95,7 @@ const Game = struct {
         };
         game.enemies = ArrayList(Enemy).init(allocator);
         game.maxEnemies = INITIAL_MAX_ENEMIES;
+        game.world = World{ .leftWall = 0, .rightWall = SCREEN_WIDTH, .floor = SCREEN_HEIGHT - 16 };
 
         return game;
     }
@@ -107,7 +110,7 @@ const Game = struct {
         } else {
             self.playerPhysics.vel.x = 0;
         }
-        self.playerPhysics.update();
+        self.playerPhysics.update(&self.world);
         // Player won't need up/down input. May need a jump button
         // if (keys[self.inputMap.up] == 1) {
         //     self.playerPos.y -= PLAYER_SPEED;
