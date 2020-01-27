@@ -38,5 +38,5 @@ pub fn initAssets(assets: *Assets, ren: *sdl.SDL_Renderer) !void {
     try assets.loadTexture(ren, "guy", c"assets/guy.png");
     try assets.loadTexture(ren, "badguy", c"assets/badguy.png");
 
-    _ = try assets.breeds.put("badguy", EnemyBreed{ .texture = assets.tex("badguy") });
+    _ = try assets.breeds.put("badguy", EnemyBreed{ .texture = assets.tex("badguy"), .ticksOnFloor = 100 });
 }
