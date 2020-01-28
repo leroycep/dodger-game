@@ -3,6 +3,9 @@ pub const SCREEN_WIDTH = 640;
 pub const SCREEN_HEIGHT = 480;
 
 pub const PLAYER_SPEED = 4.0;
+pub const PLAYER_JUMP_HEIGHT = 128.0;
+pub const PLAYER_TIME_IN_AIR = 32.0;
+pub const PLAYER_JUMP_VEL = (2 * PLAYER_JUMP_HEIGHT - 0.5 * GRAVITY * PLAYER_TIME_IN_AIR * PLAYER_TIME_IN_AIR) / PLAYER_TIME_IN_AIR;
 
 pub const ENEMY_SPEED = 4;
 pub const ENEMY_START_Y = -32;

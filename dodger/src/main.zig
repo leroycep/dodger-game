@@ -63,10 +63,9 @@ pub fn main() !void {
 }
 
 const InputMap = struct {
-    up: usize,
-    down: usize,
     left: usize,
     right: usize,
+    jump: usize,
 };
 
 const Game = struct {
@@ -89,10 +88,9 @@ const Game = struct {
         game.allocator = allocator;
         game.playerPhysics = physics.PhysicsComponent.init(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 32, 32, 32);
         game.inputMap = InputMap{
-            .up = sdl.scnFromKey(c.SDLK_UP),
-            .down = sdl.scnFromKey(c.SDLK_DOWN),
             .left = sdl.scnFromKey(c.SDLK_LEFT),
             .right = sdl.scnFromKey(c.SDLK_RIGHT),
+            .jump = sdl.scnFromKey(c.SDLK_z),
         };
         game.enemies = ArrayList(Enemy).init(allocator);
         game.maxEnemies = INITIAL_MAX_ENEMIES;
@@ -114,9 +112,9 @@ const Game = struct {
         self.playerPhysics.applyGravity();
         self.playerPhysics.update(&self.world);
         // Player won't need up/down input. May need a jump button
-        // if (keys[self.inputMap.up] == 1) {
-        //     self.playerPos.y -= PLAYER_SPEED;
-        // }
+        if (keys[self.inputMap.jump] == 1 and self.playerPhysics.isOnFloor(&self.world)) {
+            self.playerPhysics.vel.y += PLAYER_JUMP_VEL;
+        }
         // if (keys[self.inputMap.down] == 1) {
         //     self.playerPos.y += PLAYER_SPEED;
         // }
