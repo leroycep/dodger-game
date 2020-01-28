@@ -1,8 +1,8 @@
-const sdl = @import("sdl.zig");
+const c = @import("c.zig");
 const PhysicsComponent = @import("physics.zig").PhysicsComponent;
 
 pub const EnemyBreed = struct {
-    texture: *sdl.SDL_Texture,
+    texture: *c.SDL_Texture,
     ticksOnFloor: u32,
 };
 

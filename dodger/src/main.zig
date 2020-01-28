@@ -1,4 +1,5 @@
 const std = @import("std");
+const c = @import("c.zig");
 const sdl = @import("sdl.zig");
 usingnamespace @import("constants.zig");
 const ArrayList = std.ArrayList;
@@ -12,22 +13,22 @@ const Vec2 = physics.Vec2;
 const World = @import("world.zig").World;
 
 pub fn main() !void {
-    if (sdl.SDL_Init(sdl.SDL_INIT_VIDEO) != 0) {
+    if (c.SDL_Init(c.SDL_INIT_VIDEO) != 0) {
         return sdl.logErr(error.InitFailed);
     }
-    defer sdl.SDL_Quit();
+    defer c.SDL_Quit();
 
-    const win = sdl.SDL_CreateWindow(c"Hello World!", 100, 100, SCREEN_WIDTH, SCREEN_HEIGHT, sdl.SDL_WINDOW_SHOWN) orelse {
+    const win = c.SDL_CreateWindow(c"Hello World!", 100, 100, SCREEN_WIDTH, SCREEN_HEIGHT, c.SDL_WINDOW_SHOWN) orelse {
         return sdl.logErr(error.CouldntCreateWindow);
     };
-    defer sdl.SDL_DestroyWindow(win);
+    defer c.SDL_DestroyWindow(win);
 
-    const ren = sdl.SDL_CreateRenderer(win, -1, sdl.SDL_RENDERER_ACCELERATED | sdl.SDL_RENDERER_PRESENTVSYNC) orelse {
+    const ren = c.SDL_CreateRenderer(win, -1, c.SDL_RENDERER_ACCELERATED | c.SDL_RENDERER_PRESENTVSYNC) orelse {
         return sdl.logErr(error.CouldntCreateRenderer);
     };
-    defer sdl.SDL_DestroyRenderer(ren);
+    defer c.SDL_DestroyRenderer(ren);
 
-    if ((sdl.IMG_Init(sdl.IMG_INIT_PNG) & sdl.IMG_INIT_PNG) != sdl.IMG_INIT_PNG) {
+    if ((c.IMG_Init(c.IMG_INIT_PNG) & c.IMG_INIT_PNG) != c.IMG_INIT_PNG) {
         return sdl.logErr(error.ImgInit);
     }
 
@@ -38,19 +39,19 @@ pub fn main() !void {
     defer assets.deinit();
 
     var quit = false;
-    var e: sdl.SDL_Event = undefined;
-    const keys = sdl.SDL_GetKeyboardState(null);
+    var e: c.SDL_Event = undefined;
+    const keys = c.SDL_GetKeyboardState(null);
 
     var game = try Game.init(allocator, ren, assets);
     defer game.deinit();
 
     while (!quit) {
-        while (sdl.SDL_PollEvent(&e) != 0) {
-            if (e.type == sdl.SDL_QUIT) {
+        while (c.SDL_PollEvent(&e) != 0) {
+            if (e.type == c.SDL_QUIT) {
                 quit = true;
             }
-            if (e.type == sdl.SDL_KEYDOWN) {
-                if (e.key.keysym.sym == sdl.SDLK_ESCAPE) {
+            if (e.type == c.SDL_KEYDOWN) {
+                if (e.key.keysym.sym == c.SDLK_ESCAPE) {
                     quit = true;
                 }
             }
@@ -77,7 +78,7 @@ const Game = struct {
     world: World,
     rand: std.rand.DefaultPrng,
 
-    fn init(allocator: *Allocator, ren: *sdl.SDL_Renderer, assets: *Assets) !*Game {
+    fn init(allocator: *Allocator, ren: *c.SDL_Renderer, assets: *Assets) !*Game {
         var game = try allocator.create(Game);
 
         var buf: [8]u8 = undefined;
@@ -88,10 +89,10 @@ const Game = struct {
         game.allocator = allocator;
         game.playerPhysics = physics.PhysicsComponent.init(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 32, 32, 32);
         game.inputMap = InputMap{
-            .up = sdl.scnFromKey(sdl.SDLK_UP),
-            .down = sdl.scnFromKey(sdl.SDLK_DOWN),
-            .left = sdl.scnFromKey(sdl.SDLK_LEFT),
-            .right = sdl.scnFromKey(sdl.SDLK_RIGHT),
+            .up = sdl.scnFromKey(c.SDLK_UP),
+            .down = sdl.scnFromKey(c.SDLK_DOWN),
+            .left = sdl.scnFromKey(c.SDLK_LEFT),
+            .right = sdl.scnFromKey(c.SDLK_RIGHT),
         };
         game.enemies = ArrayList(Enemy).init(allocator);
         game.maxEnemies = INITIAL_MAX_ENEMIES;
@@ -152,8 +153,8 @@ const Game = struct {
         }
     }
 
-    fn render(self: *Game, ren: *sdl.SDL_Renderer, assets: *Assets) void {
-        _ = sdl.SDL_RenderClear(ren);
+    fn render(self: *Game, ren: *c.SDL_Renderer, assets: *Assets) void {
+        _ = c.SDL_RenderClear(ren);
 
         renderBackground(ren, assets.tex("background"));
         sdl.renderTexture(ren, assets.tex("guy"), self.playerPhysics.pos.x, self.playerPhysics.pos.y);
@@ -161,7 +162,7 @@ const Game = struct {
             sdl.renderTexture(ren, enemy.breed.texture, enemy.physics.pos.x, enemy.physics.pos.y);
         }
 
-        _ = sdl.SDL_RenderPresent(ren);
+        _ = c.SDL_RenderPresent(ren);
     }
 
     fn deinit(self: *Game) void {
@@ -169,26 +170,26 @@ const Game = struct {
     }
 };
 
-fn renderBackground(ren: *sdl.SDL_Renderer, bgTile: *sdl.SDL_Texture) void {
-    var dst: sdl.SDL_Rect = undefined;
+fn renderBackground(ren: *c.SDL_Renderer, bgTile: *c.SDL_Texture) void {
+    var dst: c.SDL_Rect = undefined;
 
     // Query the texture's size
-    _ = sdl.SDL_QueryTexture(bgTile, null, null, &dst.w, &dst.h);
+    _ = c.SDL_QueryTexture(bgTile, null, null, &dst.w, &dst.h);
 
     dst.y = 0;
 
     while (dst.y < SCREEN_HEIGHT) {
         dst.x = 0;
         while (dst.x < SCREEN_WIDTH) {
-            _ = sdl.SDL_RenderCopy(ren, bgTile, null, &dst);
+            _ = c.SDL_RenderCopy(ren, bgTile, null, &dst);
             dst.x += dst.w;
         }
         dst.y += dst.h;
     }
 }
 
-fn point(x: c_int, y: c_int) sdl.SDL_Point {
-    return sdl.SDL_Point{
+fn point(x: c_int, y: c_int) c.SDL_Point {
+    return c.SDL_Point{
         .x = x,
         .y = y,
     };
