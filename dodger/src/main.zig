@@ -120,11 +120,10 @@ const Game = struct {
         // }
 
         if (self.enemies.toSlice().len < self.maxEnemies) {
-            const breed = &assets.breeds.get("badguy").?.value;
             self.enemies.append(Enemy{
-                .breed = breed,
+                .breed = &assets.breeds.get("badguy").?.value,
                 .physics = physics.PhysicsComponent.init(0, SCREEN_HEIGHT + 32, 32, 32), // Start the enemy below the screen, so it will be picked up by the loop
-                .ticksLeftOnFloor = breed.ticksOnFloor,
+                .ticksLeftOnFloor = 0,
             }) catch |_| {
                 // Do nothing
             };
