@@ -139,7 +139,10 @@ const Game = struct {
                     enemy.physics.pos.y = ENEMY_START_Y;
                     enemy.physics.pos.x = self.rand.random.float(f32) * (SCREEN_WIDTH - 32) + 32;
                     enemy.physics.vel = Vec2.zero();
-                    enemy.ticksLeftOnFloor = enemy.breed.ticksOnFloor;
+
+                    const ticks = enemy.breed.ticksOnFloor;
+                    const variation = (ticks * 100 / ENEMY_TICKS_ON_FLOOR_VARIATION) / 100;
+                    enemy.ticksLeftOnFloor = self.rand.random.intRangeLessThan(u32, ticks - variation, ticks + variation);
                 }
 
                 enemy.ticksLeftOnFloor -= 1;
