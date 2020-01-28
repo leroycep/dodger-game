@@ -9,9 +9,9 @@ pub const PLAYER_JUMP_VEL = (2 * PLAYER_JUMP_HEIGHT - 0.5 * GRAVITY * PLAYER_TIM
 
 pub const ENEMY_SPEED = 4;
 pub const ENEMY_START_Y = -32;
-pub const INITIAL_MAX_ENEMIES = 5;
+pub const INITIAL_MAX_ENEMIES = 10;
 pub const ENEMY_TICKS_ON_FLOOR = 30;
-pub const ENEMY_TICKS_ON_FLOOR_VARIATION = 20; // Percentage, multiply int by 100 then divide by this
+pub const ENEMY_TICKS_ON_FLOOR_VARIATION = 20; // Percentage, multiply int by 100 then divide by this, then divide by 100
 
 pub const GRAVITY = 2.0;
 pub const MAX_VELOCITY = 10.0;

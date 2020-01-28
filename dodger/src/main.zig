@@ -141,7 +141,7 @@ const Game = struct {
                     enemy.physics.vel = Vec2.zero();
 
                     const ticks = enemy.breed.ticksOnFloor;
-                    const variation = (ticks * 100 / ENEMY_TICKS_ON_FLOOR_VARIATION) / 100;
+                    const variation = (ticks * ENEMY_TICKS_ON_FLOOR_VARIATION) / 100;
                     enemy.ticksLeftOnFloor = self.rand.random.intRangeLessThan(u32, ticks - variation, ticks + variation);
                 }
 
