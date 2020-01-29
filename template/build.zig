@@ -1,6 +1,16 @@
+const std = @import("std");
+const fs = std.fs;
 const Builder = @import("std").build.Builder;
+const Step = @import("std").build.Step;
+const LibExeObjStep = @import("std").build.LibExeObjStep;
 
 pub fn build(b: *Builder) void {
+    std.debug.warn("{}\n", b.build_root);
+    std.debug.warn("{}\n", b.cache_root);
+    const file2c = buildFile2c(b);
+    const file2c_output_dir = fs.path.join(b.allocator, &[_][]const u8{ b.build_root, b.cache_root, FILE2C_OUTPUT_SUBDIR }) catch unreachable;
+    const resources = buildResources(b, file2c, file2c_output_dir);
+
     const mode = b.standardReleaseOptions();
     const exe = b.addExecutable("template", "src/main.zig");
     exe.setBuildMode(mode);
@@ -10,8 +20,12 @@ pub fn build(b: *Builder) void {
     exe.linkSystemLibrary("GLESv2");
     exe.linkSystemLibrary("c");
     exe.addIncludeDir("lib/kiwi/src/");
+    exe.addIncludeDir(file2c_output_dir);
+    exe.step.dependOn(resources);
 
     const lib_cflags = [_][]const u8{};
+    const resource_c_path = fs.path.join(b.allocator, &[_][]const u8{ file2c_output_dir, "resources.c" }) catch unreachable;
+    exe.addCSourceFile(resource_c_path, lib_cflags);
     inline for (KIWI_SOURCES) |src| {
         exe.addCSourceFile(KIWI_SOURCE_PATH ++ "/" ++ src, lib_cflags);
     }
@@ -24,8 +38,41 @@ pub fn build(b: *Builder) void {
     run_step.dependOn(&run_cmd.step);
 }
 
-const KIWI_SOURCE_PATH = "lib/kiwi/src";
+fn buildFile2c(b: *Builder) *LibExeObjStep {
+    const exe = b.addExecutable("file2c", "src/_blank.zig");
+    exe.linkSystemLibrary("c");
+    exe.addCSourceFile(KIWI_SOURCE_PATH ++ fs.path.sep_str ++ FILE2C_SOURCE, [_][]const u8{});
+    return exe;
+}
+
+/// Build the resources.(c|h) files using `file2c`
+fn buildResources(b: *Builder, file2c: *LibExeObjStep, output_dir: []const u8) *Step {
+    b.makePath(output_dir) catch unreachable;
+    const file2c_run_cmd = file2c.run();
+    const res_c = fs.path.join(b.allocator, &[_][]const u8{ output_dir, "resources.c" }) catch unreachable;
+    const res_h = fs.path.join(b.allocator, &[_][]const u8{ output_dir, "resources.h" }) catch unreachable;
+    const kiwi_project_path = fs.path.join(b.allocator, &[_][]const u8{ b.build_root, KIWI_PROJECT_PATH }) catch unreachable;
+    file2c_run_cmd.cwd = kiwi_project_path;
+    file2c_run_cmd.addArgs([_][]const u8{ res_h, res_c, "resources/sourcesans-pro-semibold.ttf" });
+
+    const build_resources_step = b.step("build_resources", "Build the resources for KiWi into a `resources.c` file");
+    build_resources_step.dependOn(&file2c_run_cmd.step);
+    return build_resources_step;
+}
+
+//fn runFile2c() void {
+//    b.makePath(output_dir) catch unreachable;
+//    const file2c_env = std.BufMap.init(b.allocator);
+//    const res_c = fs.path.join(b.allocator, &[_][]const u8{ output_dir, "resources.c" }) catch unreachable;
+//    const res_h = fs.path.join(b.allocator, &[_][]const u8{ output_dir, "resources.h" }) catch unreachable;
+//    const kiwi_res_path = fs.path.join(b.allocator, &[_][]const u8{ b.build_root, KIWI_PROJECT_PATH, "resources/sourcesans-pro-semibold.ttf" }) catch unreachable;
+//    b.spawnChildEnvMap(KIWI_PROJECT_PATH, file2c_env, [_][]const u8{ res_h, res_c, kiwi_res_path });
+//}
+
+const KIWI_PROJECT_PATH = "lib/kiwi";
+const KIWI_SOURCE_PATH = KIWI_PROJECT_PATH ++ fs.path.sep_str ++ "src";
 const FILE2C_SOURCE = "file2c.c";
+const FILE2C_OUTPUT_SUBDIR = "file2c_generated_code";
 const KIWI_SOURCES = [_][]const u8{
     "KW_scrollbox_internal.c",
     "KW_scrollbox.c",
