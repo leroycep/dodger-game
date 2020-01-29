@@ -6,7 +6,7 @@ pub fn build(b: *Builder) void {
     exe.setBuildMode(mode);
     exe.linkSystemLibrary("SDL2");
     exe.linkSystemLibrary("SDL2_image");
-    exe.linkSystemLibrary("glew");
+    exe.linkSystemLibrary("GLESv2");
     exe.linkSystemLibrary("c");
     exe.install();
 
