@@ -6,13 +6,14 @@ pub fn build(b: *Builder) void {
     exe.setBuildMode(mode);
     exe.linkSystemLibrary("SDL2");
     exe.linkSystemLibrary("SDL2_image");
+    exe.linkSystemLibrary("SDL2_ttf");
     exe.linkSystemLibrary("GLESv2");
     exe.linkSystemLibrary("c");
     exe.addIncludeDir("lib/kiwi/src/");
 
     const lib_cflags = [_][]const u8{};
     inline for (KIWI_SOURCES) |src| {
-        exe.addCSourceFile("lib/kiwi/src/" ++ src, lib_cflags);
+        exe.addCSourceFile(KIWI_SOURCE_PATH ++ "/" ++ src, lib_cflags);
     }
     exe.install();
 
@@ -23,6 +24,8 @@ pub fn build(b: *Builder) void {
     run_step.dependOn(&run_cmd.step);
 }
 
+const KIWI_SOURCE_PATH = "lib/kiwi/src";
+const FILE2C_SOURCE = "file2c.c";
 const KIWI_SOURCES = [_][]const u8{
     "KW_scrollbox_internal.c",
     "KW_scrollbox.c",
