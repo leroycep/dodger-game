@@ -8,6 +8,8 @@ pub fn build(b: *Builder) void {
     exe.linkSystemLibrary("SDL2_image");
     exe.linkSystemLibrary("GLESv2");
     exe.linkSystemLibrary("c");
+    exe.addIncludeDir("src/c");
+    exe.addCSourceFile("src/c/impl.c", [_][]const u8 {});
     exe.install();
 
     const run_cmd = exe.run();

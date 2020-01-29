@@ -17,13 +17,16 @@ const fragmentSource: [*]const c.GLchar =
     c\\ }
 ;
 
+const WINDOW_WIDTH = 640;
+const WINDOW_HEIGHT = 480;
+
 pub fn main() !void {
     if (c.SDL_Init(c.SDL_INIT_VIDEO) != 0) {
         return sdl.logErr(error.InitFailed);
     }
     defer c.SDL_Quit();
 
-    const win = c.SDL_CreateWindow(c"Hello World!", 100, 100, 640, 480, c.SDL_WINDOW_SHOWN | c.SDL_WINDOW_OPENGL) orelse {
+    const win = c.SDL_CreateWindow(c"Hello World!", 100, 100, WINDOW_WIDTH, WINDOW_HEIGHT, c.SDL_WINDOW_SHOWN | c.SDL_WINDOW_OPENGL) orelse {
         return sdl.logErr(error.CouldntCreateWindow);
     };
     defer c.SDL_DestroyWindow(win);
@@ -44,6 +47,11 @@ pub fn main() !void {
     var glc = c.SDL_GL_CreateContext(win);
     defer c.SDL_GL_DeleteContext(glc);
 
+    c.glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+
+    var nk_ctx = c.nk_sdl_init(win);
+
+    // Setup vars for loop
     var quit = false;
     var e: c.SDL_Event = undefined;
     const keys = c.SDL_GetKeyboardState(null);
