@@ -55,7 +55,7 @@ pub const MenuScreen = struct {
         const weights = weights_array[0..2].ptr;
 
         c.KW_RectFillParentVertically(&geometry, rects, weights, 2, 10);
-        const label = c.KW_CreateLabel(self.gui, frame, c"Label with an icon :)", labelrect);
+        const label = c.KW_CreateLabel(self.gui, frame, c"Dodger", labelrect);
         const playbutton = c.KW_CreateButtonAndLabel(self.gui, frame, c"Play", playbuttonrect) orelse unreachable;
 
         const iconrect = c.KW_Rect{ .x = 0, .y = 48, .w = 24, .h = 24 };
