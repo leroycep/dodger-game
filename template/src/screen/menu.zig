@@ -40,11 +40,11 @@ pub const MenuScreen = struct {
         var frame = c.KW_CreateFrame(self.gui, null, &geometry);
 
         var labelrect_ = c.KW_Rect{ .x = 0, .y = 0, .w = 320, .h = 100 };
-        const labelrect: [*c]c.KW_Rect = &labelrect_;
+        const labelrect: ?*c.KW_Rect = &labelrect_;
         var playbuttonrect_: c.KW_Rect = c.KW_Rect{ .x = 0, .y = 0, .w = 320, .h = 100 };
-        const playbuttonrect: [*c]c.KW_Rect = &playbuttonrect_;
+        const playbuttonrect: ?*c.KW_Rect = &playbuttonrect_;
 
-        var rects_array = [_][*c]c.KW_Rect{ labelrect, playbuttonrect };
+        var rects_array = [_]?*c.KW_Rect{ labelrect, playbuttonrect };
         const rects = rects_array[0..2].ptr;
 
         var weights_array = [_]c_uint{ 2, 1 };
