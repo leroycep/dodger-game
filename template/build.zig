@@ -19,7 +19,7 @@ pub fn build(b: *Builder) void {
     exe.linkSystemLibrary("SDL2_ttf");
     exe.linkSystemLibrary("GLESv2");
     exe.linkSystemLibrary("c");
-    exe.addIncludeDir("lib/kiwi/src/");
+    exe.addIncludeDir(KIWI_SOURCE_PATH);
     exe.addIncludeDir(file2c_output_dir);
     exe.step.dependOn(resources);
 
@@ -60,16 +60,7 @@ fn buildResources(b: *Builder, file2c: *LibExeObjStep, output_dir: []const u8) *
     return build_resources_step;
 }
 
-//fn runFile2c() void {
-//    b.makePath(output_dir) catch unreachable;
-//    const file2c_env = std.BufMap.init(b.allocator);
-//    const res_c = fs.path.join(b.allocator, &[_][]const u8{ output_dir, "resources.c" }) catch unreachable;
-//    const res_h = fs.path.join(b.allocator, &[_][]const u8{ output_dir, "resources.h" }) catch unreachable;
-//    const kiwi_res_path = fs.path.join(b.allocator, &[_][]const u8{ b.build_root, KIWI_PROJECT_PATH, "resources/sourcesans-pro-semibold.ttf" }) catch unreachable;
-//    b.spawnChildEnvMap(KIWI_PROJECT_PATH, file2c_env, [_][]const u8{ res_h, res_c, kiwi_res_path });
-//}
-
-const KIWI_PROJECT_PATH = "lib/kiwi";
+const KIWI_PROJECT_PATH = "../lib/kiwi";
 const KIWI_SOURCE_PATH = KIWI_PROJECT_PATH ++ fs.path.sep_str ++ "src";
 const FILE2C_SOURCE = "file2c.c";
 const FILE2C_OUTPUT_SUBDIR = "file2c_generated_code";

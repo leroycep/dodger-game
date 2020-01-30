@@ -29,7 +29,7 @@ pub fn main() !void {
     const kw_driver = c.KW_CreateSDL2RenderDriver(ren, win);
     defer c.KW_ReleaseRenderDriver(kw_driver);
 
-    const set = c.KW_LoadSurface(kw_driver, c"lib/kiwi/examples/tileset/tileset.png");
+    const set = c.KW_LoadSurface(kw_driver, c"../lib/kiwi/examples/tileset/tileset.png");
     defer c.KW_ReleaseSurface(kw_driver, set);
 
     var ctx = Context{ .win = win, .kw_driver = kw_driver, .kw_tileset = set };
