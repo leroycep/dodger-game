@@ -4,21 +4,6 @@ const sdl = @import("sdl.zig");
 const screen = @import("screen.zig");
 const Context = @import("context.zig").Context;
 
-const vertexSource: [*]const u8 =
-    c\\ attribute vec4 position;
-    c\\ void main()
-    c\\ {
-    c\\     gl_Position = vec4(position.xyz, 1.0);
-    c\\ }
-;
-const fragmentSource: [*]const c.GLchar =
-    c\\ precision mediump float;
-    c\\ void main()
-    c\\ {
-    c\\     gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
-    c\\ }
-;
-
 pub fn main() !void {
     const allocator = std.heap.direct_allocator;
 
