@@ -88,10 +88,23 @@ pub fn main() !void {
     };
     defer c.KW_Quit(gui);
 
-    const geometry = c.KW_Rect{ .x = 0, .y = 0, .w = 320, .h = 240 };
-    const frame = c.KW_CreateFrame(gui, null, &geometry);
+    var geometry = c.KW_Rect{ .x = 0, .y = 0, .w = 320, .h = 240 };
+    var frame = c.KW_CreateFrame(gui, null, &geometry);
 
-    const label = c.KW_CreateLabel(gui, frame, c"Label with an icon :)", &geometry);
+    var labelrect_ = c.KW_Rect{ .x = 0, .y = 0, .w = 320, .h = 100 };
+    const labelrect: [*c]c.KW_Rect = &labelrect_;
+    var playbuttonrect_: c.KW_Rect = c.KW_Rect{ .x = 0, .y = 0, .w = 320, .h = 100 };
+    const playbuttonrect: [*c]c.KW_Rect = &playbuttonrect_;
+
+    var rects_array = [_][*c]c.KW_Rect{ labelrect, playbuttonrect };
+    const rects = rects_array[0..2].ptr;
+
+    var weights_array = [_]c_uint{ 2, 1 };
+    const weights = weights_array[0..2].ptr;
+
+    c.KW_RectFillParentVertically(&geometry, rects, weights, 2, 10);
+    const label = c.KW_CreateLabel(gui, frame, c"Label with an icon :)", labelrect);
+    const playbutton = c.KW_CreateButtonAndLabel(gui, frame, c"Play", playbuttonrect) orelse unreachable;
 
     const iconrect = c.KW_Rect{ .x = 0, .y = 48, .w = 24, .h = 24 };
     c.KW_SetLabelIcon(label, &iconrect);
@@ -101,7 +114,7 @@ pub fn main() !void {
     const keys = c.SDL_GetKeyboardState(null);
 
     var screens = std.ArrayList(*Screen).init(allocator);
-    try screens.append(&(try MenuScreen.init(allocator, gui)).screen);
+    try screens.append(&(try MenuScreen.init(allocator, gui, playbutton)).screen);
 
     while (!quit) {
         while (c.SDL_PollEvent(&e) != 0) {
@@ -137,12 +150,19 @@ const MenuScreen = struct {
     allocator: *std.mem.Allocator,
     screen: Screen,
     gui: *c.KW_GUI,
+    playButtonPressed: *bool,
 
-    fn init(allocator: *std.mem.Allocator, gui: *c.KW_GUI) !*MenuScreen {
+    fn init(allocator: *std.mem.Allocator, gui: *c.KW_GUI, button: *c.KW_Widget) !*MenuScreen {
         const self = try allocator.create(MenuScreen);
         self.allocator = allocator;
         self.screen = Screen.init(update, render, deinit);
         self.gui = gui;
+        self.playButtonPressed = try allocator.create(bool);
+        self.playButtonPressed.* = false;
+
+        c.KW_SetWidgetUserData(button, @ptrCast(*c_void, self.playButtonPressed));
+        c.KW_AddWidgetMouseDownHandler(button, onPlayPressed);
+
         return self;
     }
 
@@ -150,6 +170,12 @@ const MenuScreen = struct {
         const self = @fieldParentPtr(MenuScreen, "screen", screen);
 
         c.KW_ProcessEvents(self.gui);
+
+        if (self.playButtonPressed.*) {
+            const play_screen = PlayScreen.init(self.allocator) catch unreachable;
+            return Transition{ .PushScreen = &play_screen.screen };
+        }
+
         if (keys[sdl.scnFromKey(c.SDLK_ESCAPE)] == 1) {
             return Transition{ .PopScreen = {} };
         }
@@ -160,6 +186,41 @@ const MenuScreen = struct {
         const self = @fieldParentPtr(MenuScreen, "screen", screen);
 
         c.KW_Paint(self.gui);
+    }
+
+    fn deinit(screen: *Screen) void {
+        const self = @fieldParentPtr(MenuScreen, "screen", screen);
+        self.allocator.destroy(self.playButtonPressed);
+        self.allocator.destroy(self);
+    }
+
+    extern fn onPlayPressed(widget: ?*c.KW_Widget, mouse_button: c_int) void {
+        const playButtonPressed = @ptrCast(*bool, c.KW_GetWidgetUserData(widget));
+        playButtonPressed.* = true;
+    }
+};
+
+const PlayScreen = struct {
+    allocator: *std.mem.Allocator,
+    screen: Screen,
+
+    fn init(allocator: *std.mem.Allocator) !*PlayScreen {
+        const self = try allocator.create(PlayScreen);
+        self.allocator = allocator;
+        self.screen = Screen.init(update, render, deinit);
+        return self;
+    }
+
+    fn update(screen: *Screen, keys: [*]const u8) Transition {
+        const self = @fieldParentPtr(MenuScreen, "screen", screen);
+        if (keys[sdl.scnFromKey(c.SDLK_ESCAPE)] == 1) {
+            return Transition{ .PopScreen = {} };
+        }
+        return Transition{ .None = {} };
+    }
+
+    fn render(screen: *Screen, ren: *c.SDL_Renderer) anyerror!void {
+        const self = @fieldParentPtr(MenuScreen, "screen", screen);
     }
 
     fn deinit(screen: *Screen) void {
