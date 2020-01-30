@@ -36,7 +36,11 @@ pub const MenuScreen = struct {
 
         self.gui = c.KW_Init(ctx.kw_driver, ctx.kw_tileset) orelse unreachable;
 
+        var windowrect = c.KW_Rect{ .x = 0, .y = 0, .w = 320, .h = 240 };
+        c.SDL_GetWindowSize(ctx.win, &windowrect.w, &windowrect.h);
+
         var geometry = c.KW_Rect{ .x = 0, .y = 0, .w = 320, .h = 240 };
+        c.KW_RectCenterInParent(&windowrect, &geometry);
         var frame = c.KW_CreateFrame(self.gui, null, &geometry);
 
         var labelrect_ = c.KW_Rect{ .x = 0, .y = 0, .w = 320, .h = 100 };
