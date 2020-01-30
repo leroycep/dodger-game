@@ -13,18 +13,24 @@ pub const PlayScreen = struct {
         const self = try allocator.create(PlayScreen);
         self.allocator = allocator;
         self.screen = Screen{
-            .updateFn = update,
+            .onEventFn = onEvent,
             .renderFn = render,
             .deinitFn = deinit,
         };
         return self;
     }
 
-    fn update(screen: *Screen, keys: [*]const u8) ?Transition {
+    fn onEvent(screen: *Screen, event: ScreenEvent) ?Transition {
         const self = @fieldParentPtr(Self, "screen", screen);
-        if (keys[sdl.scnFromKey(c.SDLK_ESCAPE)] == 1) {
-            return Transition{ .PopScreen = {} };
+
+        switch (event) {
+            .KeyPressed => |value| {
+                if (value == c.SDLK_ESCAPE) {
+                    return Transition{ .PopScreen = {} };
+                }
+            },
         }
+
         return null;
     }
 

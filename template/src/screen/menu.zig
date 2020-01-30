@@ -18,6 +18,7 @@ pub const MenuScreen = struct {
         self.allocator = allocator;
         self.screen = Screen{
             .startFn = start,
+            .onEventFn = onEvent,
             .updateFn = update,
             .renderFn = render,
             .deinitFn = deinit,
@@ -60,6 +61,20 @@ pub const MenuScreen = struct {
         c.KW_AddWidgetMouseDownHandler(playbutton, onPlayPressed);
     }
 
+    fn onEvent(screen: *Screen, event: ScreenEvent) ?Transition {
+        const self = @fieldParentPtr(Self, "screen", screen);
+
+        switch (event) {
+            .KeyPressed => |value| {
+                if (value == c.SDLK_ESCAPE) {
+                    return Transition{ .PopScreen = {} };
+                }
+            },
+        }
+
+        return null;
+    }
+
     fn update(screen: *Screen, keys: [*]const u8) ?Transition {
         const self = @fieldParentPtr(Self, "screen", screen);
 
@@ -70,9 +85,6 @@ pub const MenuScreen = struct {
             return Transition{ .PushScreen = &play_screen.screen };
         }
 
-        if (keys[sdl.scnFromKey(c.SDLK_ESCAPE)] == 1) {
-            return Transition{ .PopScreen = {} };
-        }
         return null;
     }
 

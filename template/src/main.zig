@@ -54,6 +54,11 @@ pub fn main() !void {
                 if (e.type == c.SDL_QUIT) {
                     quit = true;
                 }
+                if (e.type == c.SDL_KEYDOWN) {
+                    if (currentScreen.onEvent(screen.ScreenEvent{ .KeyPressed = e.key.keysym.sym })) |t| {
+                        break :update t;
+                    }
+                }
             }
 
             if (currentScreen.update(keys)) |transition| {

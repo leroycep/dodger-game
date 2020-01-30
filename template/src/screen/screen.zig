@@ -11,9 +11,18 @@ pub const Transition = union(TransitionTag) {
     PopScreen: void,
 };
 
+pub const ScreenEventTag = enum {
+    KeyPressed,
+};
+
+pub const ScreenEvent = union(ScreenEventTag) {
+    KeyPressed: c.SDL_Keycode,
+};
+
 pub const Screen = struct {
     startFn: ?fn (self: *Screen, *Context) void = null,
-    updateFn: fn (self: *Screen, keys: [*]const u8) ?Transition,
+    onEventFn: ?fn (self: *Screen, event: ScreenEvent) ?Transition = null,
+    updateFn: ?fn (self: *Screen, keys: [*]const u8) ?Transition = null,
     renderFn: fn (self: *Screen, *c.SDL_Renderer) anyerror!void,
     stopFn: ?fn (self: *Screen, *Context) void = null,
     deinitFn: ?fn (self: *Screen) void = null,
@@ -24,8 +33,18 @@ pub const Screen = struct {
         }
     }
 
+    pub fn onEvent(self: *Screen, event: ScreenEvent) ?Transition {
+        if (self.onEventFn) |func| {
+            return func(self, event);
+        }
+        return null;
+    }
+
     pub fn update(self: *Screen, keys: [*]const u8) ?Transition {
-        return self.updateFn(self, keys);
+        if (self.updateFn) |func| {
+            return func(self, keys);
+        }
+        return null;
     }
 
     pub fn render(self: *Screen, ren: *c.SDL_Renderer) !void {
