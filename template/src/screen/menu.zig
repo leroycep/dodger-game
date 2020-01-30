@@ -41,7 +41,7 @@ pub const MenuScreen = struct {
 
         var labelrect_ = c.KW_Rect{ .x = 0, .y = 0, .w = 320, .h = 100 };
         const labelrect: ?*c.KW_Rect = &labelrect_;
-        var playbuttonrect_: c.KW_Rect = c.KW_Rect{ .x = 0, .y = 0, .w = 320, .h = 100 };
+        var playbuttonrect_: c.KW_Rect = c.KW_Rect{ .x = 10, .y = 0, .w = 300, .h = 20 };
         const playbuttonrect: ?*c.KW_Rect = &playbuttonrect_;
 
         var rects_array = [_]?*c.KW_Rect{ labelrect, playbuttonrect };
