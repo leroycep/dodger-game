@@ -30,16 +30,16 @@ const Transition = union(TransitionTag) {
 };
 
 const Screen = struct {
+    startFn: ?fn (self: *Screen) void = null,
     updateFn: fn (self: *Screen, keys: [*]const u8) Transition,
     renderFn: fn (self: *Screen, *c.SDL_Renderer) anyerror!void,
-    deinitFn: fn (self: *Screen) void,
+    stopFn: ?fn (self: *Screen) void = null,
+    deinitFn: ?fn (self: *Screen) void = null,
 
-    pub fn init(updateFn: fn (*Screen, [*]const u8) Transition, renderFn: fn (*Screen, *c.SDL_Renderer) anyerror!void, deinitFn: fn (*Screen) void) Screen {
-        return Screen{
-            .updateFn = updateFn,
-            .renderFn = renderFn,
-            .deinitFn = deinitFn,
-        };
+    pub fn start(self: *Screen) void {
+        if (self.startFn) |func| {
+            return func(self);
+        }
     }
 
     pub fn update(self: *Screen, keys: [*]const u8) Transition {
@@ -50,8 +50,16 @@ const Screen = struct {
         return self.renderFn(self, ren);
     }
 
+    pub fn stop(self: *Screen) void {
+        if (self.stopFn) |func| {
+            return func(self);
+        }
+    }
+
     pub fn deinit(self: *Screen) void {
-        self.deinitFn(self);
+        if (self.deinitFn) |func| {
+            func(self);
+        }
     }
 };
 
@@ -110,6 +118,7 @@ pub fn main() !void {
     c.KW_SetLabelIcon(label, &iconrect);
 
     var quit = false;
+    var screenStarted = false;
     var e: c.SDL_Event = undefined;
     const keys = c.SDL_GetKeyboardState(null);
 
@@ -117,31 +126,39 @@ pub fn main() !void {
     try screens.append(&(try MenuScreen.init(allocator, gui, playbutton)).screen);
 
     while (!quit) {
+        const currentScreen = screens.toSlice()[screens.len - 1];
+        if (!screenStarted) {
+            currentScreen.start();
+            screenStarted = true;
+        }
+
         while (c.SDL_PollEvent(&e) != 0) {
             if (e.type == c.SDL_QUIT) {
                 quit = true;
             }
+        }
 
-            const currentScreen = screens.toSlice()[screens.len - 1];
+        const transition = currentScreen.update(keys);
 
-            const transition = currentScreen.update(keys);
+        _ = c.SDL_RenderClear(ren);
+        try currentScreen.render(ren);
+        c.SDL_RenderPresent(ren);
 
-            _ = c.SDL_RenderClear(ren);
-            try currentScreen.render(ren);
-            c.SDL_RenderPresent(ren);
-
-            switch (transition) {
-                .PushScreen => |newScreen| {
-                    try screens.append(newScreen);
-                },
-                .PopScreen => {
-                    screens.pop().deinit();
-                    if (screens.len == 0) {
-                        quit = true;
-                    }
-                },
-                .None => {},
-            }
+        switch (transition) {
+            .PushScreen => |newScreen| {
+                currentScreen.stop();
+                try screens.append(newScreen);
+                screenStarted = false;
+            },
+            .PopScreen => {
+                currentScreen.stop();
+                screens.pop().deinit();
+                if (screens.len == 0) {
+                    quit = true;
+                }
+                screenStarted = false;
+            },
+            .None => {},
         }
     }
 }
@@ -155,7 +172,12 @@ const MenuScreen = struct {
     fn init(allocator: *std.mem.Allocator, gui: *c.KW_GUI, button: *c.KW_Widget) !*MenuScreen {
         const self = try allocator.create(MenuScreen);
         self.allocator = allocator;
-        self.screen = Screen.init(update, render, deinit);
+        self.screen = Screen{
+            .startFn = start,
+            .updateFn = update,
+            .renderFn = render,
+            .deinitFn = deinit,
+        };
         self.gui = gui;
         self.playButtonPressed = try allocator.create(bool);
         self.playButtonPressed.* = false;
@@ -164,6 +186,11 @@ const MenuScreen = struct {
         c.KW_AddWidgetMouseDownHandler(button, onPlayPressed);
 
         return self;
+    }
+
+    fn start(screen: *Screen) void {
+        const self = @fieldParentPtr(MenuScreen, "screen", screen);
+        self.playButtonPressed.* = false;
     }
 
     fn update(screen: *Screen, keys: [*]const u8) Transition {
@@ -207,7 +234,11 @@ const PlayScreen = struct {
     fn init(allocator: *std.mem.Allocator) !*PlayScreen {
         const self = try allocator.create(PlayScreen);
         self.allocator = allocator;
-        self.screen = Screen.init(update, render, deinit);
+        self.screen = Screen{
+            .updateFn = update,
+            .renderFn = render,
+            .deinitFn = deinit,
+        };
         return self;
     }
 
