@@ -13,7 +13,7 @@ pub fn main() !void {
     }
     defer c.SDL_Quit();
 
-    const win = c.SDL_CreateWindow(c"Hello World!", 100, 100, 640, 480, c.SDL_WINDOW_SHOWN | c.SDL_WINDOW_OPENGL) orelse {
+    const win = c.SDL_CreateWindow(c"Hello World!", c.SDL_WINDOWPOS_UNDEFINED_MASK, c.SDL_WINDOWPOS_UNDEFINED_MASK, 640, 480, c.SDL_WINDOW_SHOWN | c.SDL_WINDOW_OPENGL) orelse {
         return sdl.logErr(error.CouldntCreateWindow);
     };
     defer c.SDL_DestroyWindow(win);
