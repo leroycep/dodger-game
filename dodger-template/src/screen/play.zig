@@ -47,7 +47,7 @@ pub const PlayScreen = struct {
         self.rand = std.rand.DefaultPrng.init(seed);
 
         self.allocator = allocator;
-        self.playerPhysics = physics.PhysicsComponent.init(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 32, 32, 32);
+        self.playerPhysics = physics.PhysicsComponent.init(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 32, 12, 26);
         self.inputMap = InputMap{
             .left = sdl.scnFromKey(c.SDLK_LEFT),
             .right = sdl.scnFromKey(c.SDLK_RIGHT),
@@ -76,8 +76,8 @@ pub const PlayScreen = struct {
 
     fn update(screen: *Screen, ctx: *Context, keys: [*]const u8) ?Transition {
         const self = @fieldParentPtr(Self, "screen", screen);
-        var goingLeft = keys[self.inputMap.left] == 1 and self.playerPhysics.pos.x > 16;
-        var goingRight = keys[self.inputMap.right] == 1 and self.playerPhysics.pos.x < SCREEN_WIDTH - 16;
+        var goingLeft = keys[self.inputMap.left] == 1;
+        var goingRight = keys[self.inputMap.right] == 1;
         if (goingLeft and !goingRight) {
             self.playerPhysics.vel.x = -PLAYER_SPEED;
         } else if (goingRight and !goingLeft) {
