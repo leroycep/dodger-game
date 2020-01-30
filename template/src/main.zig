@@ -28,21 +28,31 @@ pub fn main() !void {
     };
     defer c.SDL_DestroyWindow(win);
 
-    if (c.SDL_GL_SetAttribute(c.SDL_GLattr.SDL_GL_CONTEXT_MAJOR_VERSION, 2) != 0) {
-        return sdl.logErr(error.InitFailed);
-    }
-    if (c.SDL_GL_SetAttribute(c.SDL_GLattr.SDL_GL_CONTEXT_MINOR_VERSION, 0) != 0) {
-        return sdl.logErr(error.InitFailed);
-    }
-    if (c.SDL_GL_SetAttribute(c.SDL_GLattr.SDL_GL_DOUBLEBUFFER, 1) != 0) {
-        return sdl.logErr(error.InitFailed);
-    }
-    if (c.SDL_GL_SetAttribute(c.SDL_GLattr.SDL_GL_DEPTH_SIZE, 24) != 0) {
-        return sdl.logErr(error.InitFailed);
+    const ren = c.SDL_CreateRenderer(win, -1, c.SDL_RENDERER_ACCELERATED | c.SDL_RENDERER_PRESENTVSYNC) orelse {
+        return sdl.logErr(error.CouldntCreateRenderer);
+    };
+    defer c.SDL_DestroyRenderer(ren);
+
+    if ((c.IMG_Init(c.IMG_INIT_PNG) & c.IMG_INIT_PNG) != c.IMG_INIT_PNG) {
+        return sdl.logErr(error.ImgInit);
     }
 
-    var glc = c.SDL_GL_CreateContext(win);
-    defer c.SDL_GL_DeleteContext(glc);
+    const kw_driver = c.KW_CreateSDL2RenderDriver(ren, win);
+    defer c.KW_ReleaseRenderDriver(kw_driver);
+
+    const set = c.KW_LoadSurface(kw_driver, c"lib/kiwi/examples/tileset/tileset.png");
+    defer c.KW_ReleaseSurface(kw_driver, set);
+
+    const gui = c.KW_Init(kw_driver, set);
+    defer c.KW_Quit(gui);
+
+    const geometry = c.KW_Rect { .x = 0, .y = 0, .w = 320, .h = 240};
+    const frame = c.KW_CreateFrame(gui, null, &geometry);
+
+    const label = c.KW_CreateLabel(gui, frame, c"Label with an icon :)", &geometry);
+
+    const iconrect = c.KW_Rect { .x = 0, .y = 48, .w = 24, .h = 24};
+    c.KW_SetLabelIcon(label, &iconrect);
 
     var quit = false;
     var e: c.SDL_Event = undefined;
@@ -59,10 +69,10 @@ pub fn main() !void {
                 }
             }
 
-            c.glClearColor(1.0, 0.0, 0.0, 1.0);
-            c.glClear(c.GL_COLOR_BUFFER_BIT);
-            c.SDL_GL_SwapWindow(win);
-
+            _ = c.SDL_RenderClear(ren);
+            c.KW_ProcessEvents(gui);
+            c.KW_Paint(gui);
+            c.SDL_RenderPresent(ren);
         }
     }
 }
