@@ -4,6 +4,7 @@ const sdl = @import("sdl.zig");
 const screen = @import("screen.zig");
 const Context = @import("context.zig").Context;
 const assets = @import("assets.zig");
+usingnamespace @import("constants.zig");
 
 pub fn main() !void {
     const allocator = std.heap.direct_allocator;
@@ -13,7 +14,7 @@ pub fn main() !void {
     }
     defer c.SDL_Quit();
 
-    const win = c.SDL_CreateWindow(c"Hello World!", c.SDL_WINDOWPOS_UNDEFINED_MASK, c.SDL_WINDOWPOS_UNDEFINED_MASK, 640, 480, c.SDL_WINDOW_SHOWN | c.SDL_WINDOW_OPENGL) orelse {
+    const win = c.SDL_CreateWindow(c"Hello World!", c.SDL_WINDOWPOS_UNDEFINED_MASK, c.SDL_WINDOWPOS_UNDEFINED_MASK, SCREEN_WIDTH, SCREEN_HEIGHT, c.SDL_WINDOW_SHOWN | c.SDL_WINDOW_OPENGL) orelse {
         return sdl.logErr(error.CouldntCreateWindow);
     };
     defer c.SDL_DestroyWindow(win);
@@ -46,6 +47,8 @@ pub fn main() !void {
     var screens = std.ArrayList(*screen.Screen).init(allocator);
     try screens.append(&(try screen.menu.MenuScreen.init(allocator)).screen);
 
+    var frame_timer = try std.time.Timer.start();
+
     while (!quit) {
         const currentScreen = screens.toSlice()[screens.len - 1];
         if (!screenStarted) {
@@ -65,8 +68,11 @@ pub fn main() !void {
                 }
             }
 
-            if (currentScreen.update(&ctx, keys)) |transition| {
-                break :update transition;
+            if (frame_timer.read() >= FRAME_TIME) {
+                if (currentScreen.update(&ctx, keys)) |transition| {
+                    break :update transition;
+                }
+                frame_timer.reset();
             }
             break :update null;
         };

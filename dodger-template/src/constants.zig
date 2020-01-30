@@ -1,3 +1,4 @@
+pub const FRAME_TIME = 16666666;
 
 pub const SCREEN_WIDTH = 640;
 pub const SCREEN_HEIGHT = 480;
