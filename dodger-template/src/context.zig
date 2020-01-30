@@ -7,4 +7,5 @@ pub const Context = struct {
     kw_driver: *c.KW_RenderDriver,
     kw_tileset: *c.KW_Surface,
     assets: *Assets,
+    fps: f32,
 };

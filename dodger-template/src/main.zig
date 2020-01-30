@@ -37,7 +37,13 @@ pub fn main() !void {
     const assetsStruct = &assets.Assets.init(allocator);
     try assets.initAssets(assetsStruct, ren);
 
-    var ctx = Context{ .win = win, .kw_driver = kw_driver, .kw_tileset = set, .assets = assetsStruct };
+    var ctx = Context{
+        .win = win,
+        .kw_driver = kw_driver,
+        .kw_tileset = set,
+        .assets = assetsStruct,
+        .fps = 0,
+    };
 
     var quit = false;
     var screenStarted = false;
@@ -72,6 +78,7 @@ pub fn main() !void {
                 if (currentScreen.update(&ctx, keys)) |transition| {
                     break :update transition;
                 }
+                ctx.fps = (ctx.fps + @intToFloat(f32, std.time.ns_per_s) / @intToFloat(f32, frame_timer.read())) / 2;
                 frame_timer.reset();
             }
             break :update null;

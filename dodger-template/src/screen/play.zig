@@ -24,6 +24,7 @@ pub const PlayScreen = struct {
     gui: *c.KW_GUI,
     textBuf: []u8,
     scoreLabel: *c.KW_Widget,
+    fpsLabel: *c.KW_Widget,
 
     const Self = @This();
 
@@ -76,9 +77,13 @@ pub const PlayScreen = struct {
         self.lastLoopTime = std.time.milliTimestamp();
         self.gui = c.KW_Init(ctx.kw_driver, ctx.kw_tileset) orelse unreachable;
 
+        const framerect = c.KW_Rect{ .x = 0, .y = 0, .w = SCREEN_WIDTH, .h = 30 };
+        var frame = c.KW_CreateFrame(self.gui, null, &framerect);
         const labelrect = c.KW_Rect{ .x = 0, .y = 0, .w = 100, .h = 30 };
-        var frame = c.KW_CreateFrame(self.gui, null, &labelrect);
         self.scoreLabel = c.KW_CreateLabel(self.gui, frame, c"score", &labelrect).?;
+
+        const fpsrect = c.KW_Rect{ .x = SCREEN_WIDTH-100, .y = 0, .w = 100, .h = 30 };
+        self.fpsLabel = c.KW_CreateLabel(self.gui, frame, c"fps", &fpsrect).?;
     }
 
     fn onEvent(screen: *Screen, event: ScreenEvent) ?Transition {
@@ -97,6 +102,10 @@ pub const PlayScreen = struct {
 
     fn update(screen: *Screen, ctx: *Context, keys: [*]const u8) ?Transition {
         const self = @fieldParentPtr(Self, "screen", screen);
+
+        const fpsTextSlice = std.fmt.bufPrint(self.textBuf, "FPS: {d:0.2}", ctx.fps) catch unreachable;
+        self.textBuf[fpsTextSlice.len] = 0;
+        c.KW_SetLabelText(self.fpsLabel, fpsTextSlice.ptr);
 
         if (self.playerAlive) {
             const now = std.time.milliTimestamp();
