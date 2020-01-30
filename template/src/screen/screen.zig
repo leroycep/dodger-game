@@ -4,18 +4,16 @@ const Context = @import("../context.zig").Context;
 pub const TransitionTag = enum {
     PushScreen,
     PopScreen,
-    None,
 };
 
 pub const Transition = union(TransitionTag) {
     PushScreen: *Screen,
     PopScreen: void,
-    None: void,
 };
 
 pub const Screen = struct {
     startFn: ?fn (self: *Screen, *Context) void = null,
-    updateFn: fn (self: *Screen, keys: [*]const u8) Transition,
+    updateFn: fn (self: *Screen, keys: [*]const u8) ?Transition,
     renderFn: fn (self: *Screen, *c.SDL_Renderer) anyerror!void,
     stopFn: ?fn (self: *Screen, *Context) void = null,
     deinitFn: ?fn (self: *Screen) void = null,
@@ -26,7 +24,7 @@ pub const Screen = struct {
         }
     }
 
-    pub fn update(self: *Screen, keys: [*]const u8) Transition {
+    pub fn update(self: *Screen, keys: [*]const u8) ?Transition {
         return self.updateFn(self, keys);
     }
 

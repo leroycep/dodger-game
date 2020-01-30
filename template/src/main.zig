@@ -49,33 +49,39 @@ pub fn main() !void {
             screenStarted = true;
         }
 
-        while (c.SDL_PollEvent(&e) != 0) {
-            if (e.type == c.SDL_QUIT) {
-                quit = true;
+        const transition = update: {
+            while (c.SDL_PollEvent(&e) != 0) {
+                if (e.type == c.SDL_QUIT) {
+                    quit = true;
+                }
             }
-        }
 
-        const transition = currentScreen.update(keys);
+            if (currentScreen.update(keys)) |transition| {
+                break :update transition;
+            }
+            break :update null;
+        };
 
         _ = c.SDL_RenderClear(ren);
         try currentScreen.render(ren);
         c.SDL_RenderPresent(ren);
 
-        switch (transition) {
-            .PushScreen => |newScreen| {
-                currentScreen.stop(&ctx);
-                try screens.append(newScreen);
-                screenStarted = false;
-            },
-            .PopScreen => {
-                currentScreen.stop(&ctx);
-                screens.pop().deinit();
-                if (screens.len == 0) {
-                    quit = true;
-                }
-                screenStarted = false;
-            },
-            .None => {},
+        if (transition) |t| {
+            switch (t) {
+                .PushScreen => |newScreen| {
+                    currentScreen.stop(&ctx);
+                    try screens.append(newScreen);
+                    screenStarted = false;
+                },
+                .PopScreen => {
+                    currentScreen.stop(&ctx);
+                    screens.pop().deinit();
+                    if (screens.len == 0) {
+                        quit = true;
+                    }
+                    screenStarted = false;
+                },
+            }
         }
     }
 }

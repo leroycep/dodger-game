@@ -20,12 +20,12 @@ pub const PlayScreen = struct {
         return self;
     }
 
-    fn update(screen: *Screen, keys: [*]const u8) Transition {
+    fn update(screen: *Screen, keys: [*]const u8) ?Transition {
         const self = @fieldParentPtr(Self, "screen", screen);
         if (keys[sdl.scnFromKey(c.SDLK_ESCAPE)] == 1) {
             return Transition{ .PopScreen = {} };
         }
-        return Transition{ .None = {} };
+        return null;
     }
 
     fn render(screen: *Screen, ren: *c.SDL_Renderer) anyerror!void {
