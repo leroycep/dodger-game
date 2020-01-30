@@ -17,13 +17,31 @@ const fragmentSource: [*]const c.GLchar =
     c\\ }
 ;
 
+const TransitionTag = enum {
+    PushScreen,
+    PopScreen,
+    None,
+};
+
+const Transition = union(TransitionTag) {
+    PushScreen: *Screen,
+    PopScreen: void,
+    None: void,
+};
+
 const Screen = struct {
+    updateFn: fn (self: *Screen, keys: [*]const u8) Transition,
     renderFn: fn (self: *Screen, *c.SDL_Renderer) anyerror!void,
 
-    pub fn init(renderFn: fn (*Screen, *c.SDL_Renderer) anyerror!void) Screen {
+    pub fn init(updateFn: fn (*Screen, [*]const u8) Transition, renderFn: fn (*Screen, *c.SDL_Renderer) anyerror!void) Screen {
         return Screen{
+            .updateFn = updateFn,
             .renderFn = renderFn,
         };
+    }
+
+    pub fn update(self: *Screen, keys: [*]const u8) Transition {
+        return self.updateFn(self, keys);
     }
 
     pub fn render(self: *Screen, ren: *c.SDL_Renderer) !void {
@@ -82,16 +100,20 @@ pub fn main() !void {
             if (e.type == c.SDL_QUIT) {
                 quit = true;
             }
-            if (e.type == c.SDL_KEYDOWN) {
-                if (e.key.keysym.sym == c.SDLK_ESCAPE) {
+
+            switch (screen.update(keys)) {
+                .PushScreen => |newScreen| {
+                    screen = newScreen;
+                },
+                .PopScreen => {
                     quit = true;
-                }
+                },
+                .None => {},
             }
 
             _ = c.SDL_RenderClear(ren);
             try screen.render(ren);
             c.SDL_RenderPresent(ren);
-            c.SDL_Delay(1);
         }
     }
 }
@@ -102,15 +124,24 @@ const MenuScreen = struct {
 
     fn init(gui: *c.KW_GUI) MenuScreen {
         return MenuScreen{
-            .screen = Screen.init(render),
+            .screen = Screen.init(update, render),
             .gui = gui,
         };
+    }
+
+    fn update(screen: *Screen, keys: [*]const u8) Transition {
+        const self = @fieldParentPtr(MenuScreen, "screen", screen);
+
+        c.KW_ProcessEvents(self.gui);
+        if (keys[sdl.scnFromKey(c.SDLK_ESCAPE)] == 1) {
+            return Transition{.PopScreen = {}};
+        }
+        return Transition{.None = {}};
     }
 
     fn render(screen: *Screen, ren: *c.SDL_Renderer) anyerror!void {
         const self = @fieldParentPtr(MenuScreen, "screen", screen);
 
-        c.KW_ProcessEvents(self.gui);
         c.KW_Paint(self.gui);
     }
 };
