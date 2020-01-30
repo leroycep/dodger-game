@@ -75,7 +75,7 @@ pub const MenuScreen = struct {
         return null;
     }
 
-    fn update(screen: *Screen, keys: [*]const u8) ?Transition {
+    fn update(screen: *Screen, ctx: *Context, keys: [*]const u8) ?Transition {
         const self = @fieldParentPtr(Self, "screen", screen);
 
         c.KW_ProcessEvents(self.gui);
@@ -88,7 +88,7 @@ pub const MenuScreen = struct {
         return null;
     }
 
-    fn render(screen: *Screen, ren: *c.SDL_Renderer) anyerror!void {
+    fn render(screen: *Screen, ctx: *Context, ren: *c.SDL_Renderer) anyerror!void {
         const self = @fieldParentPtr(Self, "screen", screen);
 
         c.KW_Paint(self.gui);

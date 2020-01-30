@@ -1,6 +1,6 @@
 const std = @import("std");
 const sdl = @import("sdl.zig");
-const constants = @import("constants.zig");
+const constants = @import("../constants.zig");
 const World = @import("world.zig").World;
 
 pub const Vec2 = struct {

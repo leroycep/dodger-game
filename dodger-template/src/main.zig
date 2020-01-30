@@ -3,6 +3,7 @@ const c = @import("c.zig");
 const sdl = @import("sdl.zig");
 const screen = @import("screen.zig");
 const Context = @import("context.zig").Context;
+const assets = @import("assets.zig");
 
 pub fn main() !void {
     const allocator = std.heap.direct_allocator;
@@ -32,7 +33,10 @@ pub fn main() !void {
     const set = c.KW_LoadSurface(kw_driver, c"lib/kiwi/examples/tileset/tileset.png");
     defer c.KW_ReleaseSurface(kw_driver, set);
 
-    var ctx = Context{ .win = win, .kw_driver = kw_driver, .kw_tileset = set };
+    const assetsStruct = &assets.Assets.init(allocator);
+    try assets.initAssets(assetsStruct, ren);
+
+    var ctx = Context{ .win = win, .kw_driver = kw_driver, .kw_tileset = set, .assets = assetsStruct };
 
     var quit = false;
     var screenStarted = false;
@@ -61,14 +65,14 @@ pub fn main() !void {
                 }
             }
 
-            if (currentScreen.update(keys)) |transition| {
+            if (currentScreen.update(&ctx, keys)) |transition| {
                 break :update transition;
             }
             break :update null;
         };
 
         _ = c.SDL_RenderClear(ren);
-        try currentScreen.render(ren);
+        try currentScreen.render(&ctx, ren);
         c.SDL_RenderPresent(ren);
 
         if (transition) |t| {

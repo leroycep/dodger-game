@@ -1,9 +1,9 @@
 const std = @import("std");
 const Allocator = std.mem.Allocator;
 const StringHashMap = std.StringHashMap;
-const c = @import("../c.zig");
-const sdl = @import("../sdl.zig");
-const EnemyBreed = @import("enemy.zig").EnemyBreed;
+const c = @import("c.zig");
+const sdl = @import("sdl.zig");
+const EnemyBreed = @import("game/enemy.zig").EnemyBreed;
 const constants = @import("constants.zig");
 
 pub const Assets = struct {

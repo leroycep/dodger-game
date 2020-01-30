@@ -2,16 +2,15 @@ const std = @import("std");
 const c = @import("../c.zig");
 const sdl = @import("../sdl.zig");
 usingnamespace @import("screen.zig");
-usingnamespace @import("constants.zig");
+usingnamespace @import("../constants.zig");
+const Context = @import("../context.zig").Context;
 const ArrayList = std.ArrayList;
 const Allocator = std.mem.Allocator;
-const assets_ = @import("assets.zig");
-const Assets = assets_.Assets;
-const Enemy = @import("enemy.zig").Enemy;
-const EnemyBreed = @import("enemy.zig").EnemyBreed;
-const physics = @import("physics.zig");
+const Enemy = @import("../game/enemy.zig").Enemy;
+const EnemyBreed = @import("../game/enemy.zig").EnemyBreed;
+const physics = @import("../game/physics.zig");
 const Vec2 = physics.Vec2;
-const World = @import("world.zig").World;
+const World = @import("../game/world.zig").World;
 
 const InputMap = struct {
     left: usize,
@@ -31,9 +30,8 @@ pub const PlayScreen = struct {
     maxEnemies: usize,
     world: World,
     rand: std.rand.DefaultPrng,
-    assets: *Assets,
 
-    pub fn init(allocator: *std.mem.Allocator, ren: *c.SDL_Renderer) !*Self {
+    pub fn init(allocator: *std.mem.Allocator) !*Self {
         const self = try allocator.create(PlayScreen);
         self.allocator = allocator;
         self.screen = Screen{
@@ -42,9 +40,6 @@ pub const PlayScreen = struct {
             .renderFn = render,
             .deinitFn = deinit,
         };
-
-        self.assets = &Assets.init(allocator);
-        try assets_.initAssets(self.assets, ren);
 
         var buf: [8]u8 = undefined;
         try std.crypto.randomBytes(buf[0..]);
@@ -79,7 +74,7 @@ pub const PlayScreen = struct {
         return null;
     }
 
-    fn update(screen: *Screen, keys: [*]const u8) ?Transition {
+    fn update(screen: *Screen, ctx: *Context, keys: [*]const u8) ?Transition {
         const self = @fieldParentPtr(Self, "screen", screen);
         var goingLeft = keys[self.inputMap.left] == 1 and self.playerPhysics.pos.x > 16;
         var goingRight = keys[self.inputMap.right] == 1 and self.playerPhysics.pos.x < SCREEN_WIDTH - 16;
@@ -99,7 +94,7 @@ pub const PlayScreen = struct {
 
         if (self.enemies.toSlice().len < self.maxEnemies) {
             self.enemies.append(Enemy{
-                .breed = &self.assets.breeds.get("badguy").?.value,
+                .breed = &ctx.assets.breeds.get("badguy").?.value,
                 .physics = physics.PhysicsComponent.init(0, SCREEN_HEIGHT + 32, 32, 32), // Start the enemy below the screen, so it will be picked up by the loop
                 .ticksLeftOnFloor = 0,
             }) catch |_| {
@@ -133,23 +128,18 @@ pub const PlayScreen = struct {
         return null;
     }
 
-    fn render(screen: *Screen, ren: *c.SDL_Renderer) anyerror!void {
+    fn render(screen: *Screen, ctx: *Context, ren: *c.SDL_Renderer) anyerror!void {
         const self = @fieldParentPtr(Self, "screen", screen);
-        _ = c.SDL_RenderClear(ren);
 
-        renderBackground(ren, self.assets.tex("background"));
-        sdl.renderTexture(ren, self.assets.tex("guy"), self.playerPhysics.pos.x, self.playerPhysics.pos.y);
+        renderBackground(ren, ctx.assets.tex("background"));
+        sdl.renderTexture(ren, ctx.assets.tex("guy"), self.playerPhysics.pos.x, self.playerPhysics.pos.y);
         for (self.enemies.toSlice()) |*enemy| {
             sdl.renderTexture(ren, enemy.breed.texture, enemy.physics.pos.x, enemy.physics.pos.y);
         }
-
-        _ = c.SDL_RenderPresent(ren);
-
     }
 
     fn deinit(screen: *Screen) void {
         const self = @fieldParentPtr(Self, "screen", screen);
-        self.assets.deinit();
         self.enemies.deinit();
         self.allocator.destroy(self);
     }
