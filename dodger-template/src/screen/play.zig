@@ -25,6 +25,7 @@ pub const PlayScreen = struct {
     const Self = @This();
 
     playerPhysics: physics.PhysicsComponent,
+    playerAlive: bool,
     inputMap: InputMap,
     enemies: ArrayList(Enemy),
     maxEnemies: usize,
@@ -48,6 +49,7 @@ pub const PlayScreen = struct {
 
         self.allocator = allocator;
         self.playerPhysics = physics.PhysicsComponent.init(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 32, 12, 26);
+        self.playerAlive = true;
         self.inputMap = InputMap{
             .left = sdl.scnFromKey(c.SDLK_LEFT),
             .right = sdl.scnFromKey(c.SDLK_RIGHT),
@@ -76,20 +78,23 @@ pub const PlayScreen = struct {
 
     fn update(screen: *Screen, ctx: *Context, keys: [*]const u8) ?Transition {
         const self = @fieldParentPtr(Self, "screen", screen);
-        var goingLeft = keys[self.inputMap.left] == 1;
-        var goingRight = keys[self.inputMap.right] == 1;
-        if (goingLeft and !goingRight) {
-            self.playerPhysics.vel.x = -PLAYER_SPEED;
-        } else if (goingRight and !goingLeft) {
-            self.playerPhysics.vel.x = PLAYER_SPEED;
-        } else {
-            self.playerPhysics.vel.x = 0;
-        }
-        self.playerPhysics.applyGravity();
-        self.playerPhysics.update(&self.world);
-        // Player won't need up/down input. May need a jump button
-        if (keys[self.inputMap.jump] == 1 and self.playerPhysics.isOnFloor(&self.world)) {
-            self.playerPhysics.vel.y += PLAYER_JUMP_VEL;
+
+        if (self.playerAlive) {
+            var goingLeft = keys[self.inputMap.left] == 1;
+            var goingRight = keys[self.inputMap.right] == 1;
+            if (goingLeft and !goingRight) {
+                self.playerPhysics.vel.x = -PLAYER_SPEED;
+            } else if (goingRight and !goingLeft) {
+                self.playerPhysics.vel.x = PLAYER_SPEED;
+            } else {
+                self.playerPhysics.vel.x = 0;
+            }
+            self.playerPhysics.applyGravity();
+            self.playerPhysics.update(&self.world);
+            // Player won't need up/down input. May need a jump button
+            if (keys[self.inputMap.jump] == 1 and self.playerPhysics.isOnFloor(&self.world)) {
+                self.playerPhysics.vel.y += PLAYER_JUMP_VEL;
+            }
         }
 
         if (self.enemies.toSlice().len < self.maxEnemies) {
@@ -103,10 +108,6 @@ pub const PlayScreen = struct {
         }
 
         for (self.enemies.toSlice()) |*enemy, i| {
-            if (physics.distance(enemy.physics.pos, self.playerPhysics.pos) < 32) {
-                std.debug.warn("You're dead!\n");
-            }
-
             if (enemy.physics.isOnFloor(&self.world)) {
                 if (enemy.ticksLeftOnFloor == 0) {
                     enemy.physics.pos.y = ENEMY_START_Y;
@@ -123,6 +124,10 @@ pub const PlayScreen = struct {
 
             enemy.physics.applyGravity();
             enemy.physics.update(&self.world);
+
+            if (enemy.physics.intersects(&self.playerPhysics)) {
+                self.playerAlive = false;
+            }
         }
 
         return null;
@@ -132,7 +137,9 @@ pub const PlayScreen = struct {
         const self = @fieldParentPtr(Self, "screen", screen);
 
         renderBackground(ren, ctx.assets.tex("background"));
-        sdl.renderTexture(ren, ctx.assets.tex("guy"), self.playerPhysics.pos.x, self.playerPhysics.pos.y);
+        if (self.playerAlive) {
+            sdl.renderTexture(ren, ctx.assets.tex("guy"), self.playerPhysics.pos.x, self.playerPhysics.pos.y);
+        }
         for (self.enemies.toSlice()) |*enemy| {
             sdl.renderTexture(ren, enemy.breed.texture, enemy.physics.pos.x, enemy.physics.pos.y);
         }

@@ -73,4 +73,11 @@ pub const PhysicsComponent = struct {
         }
         self.pos.y = nextY;
     }
+
+    pub fn intersects(self: *PhysicsComponent, other: *PhysicsComponent) bool {
+        return (self.pos.x - self.size.x / 2 < other.pos.x + other.size.x / 2 and
+            self.pos.x + self.size.x / 2 > other.pos.x - other.size.x / 2 and
+            self.pos.y - self.size.y / 2 < other.pos.y + other.size.y / 2 and
+            self.pos.y + self.size.y / 2 > other.pos.y - other.size.y / 2);
+    }
 };
