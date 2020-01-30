@@ -32,11 +32,13 @@ const Transition = union(TransitionTag) {
 const Screen = struct {
     updateFn: fn (self: *Screen, keys: [*]const u8) Transition,
     renderFn: fn (self: *Screen, *c.SDL_Renderer) anyerror!void,
+    deinitFn: fn (self: *Screen) void,
 
-    pub fn init(updateFn: fn (*Screen, [*]const u8) Transition, renderFn: fn (*Screen, *c.SDL_Renderer) anyerror!void) Screen {
+    pub fn init(updateFn: fn (*Screen, [*]const u8) Transition, renderFn: fn (*Screen, *c.SDL_Renderer) anyerror!void, deinitFn: fn (*Screen) void) Screen {
         return Screen{
             .updateFn = updateFn,
             .renderFn = renderFn,
+            .deinitFn = deinitFn,
         };
     }
 
@@ -46,6 +48,10 @@ const Screen = struct {
 
     pub fn render(self: *Screen, ren: *c.SDL_Renderer) !void {
         return self.renderFn(self, ren);
+    }
+
+    pub fn deinit(self: *Screen) void {
+        self.deinitFn(self);
     }
 };
 
@@ -93,7 +99,9 @@ pub fn main() !void {
     var quit = false;
     var e: c.SDL_Event = undefined;
     const keys = c.SDL_GetKeyboardState(null);
-    var screen = &MenuScreen.init(gui).screen;
+
+    var screens = std.ArrayList(*Screen).init(allocator);
+    try screens.append(&(try MenuScreen.init(allocator, gui)).screen);
 
     while (!quit) {
         while (c.SDL_PollEvent(&e) != 0) {
@@ -101,32 +109,41 @@ pub fn main() !void {
                 quit = true;
             }
 
-            switch (screen.update(keys)) {
+            const currentScreen = screens.toSlice()[screens.len - 1];
+
+            const transition = currentScreen.update(keys);
+
+            _ = c.SDL_RenderClear(ren);
+            try currentScreen.render(ren);
+            c.SDL_RenderPresent(ren);
+
+            switch (transition) {
                 .PushScreen => |newScreen| {
-                    screen = newScreen;
+                    try screens.append(newScreen);
                 },
                 .PopScreen => {
-                    quit = true;
+                    screens.pop().deinit();
+                    if (screens.len == 0) {
+                        quit = true;
+                    }
                 },
                 .None => {},
             }
-
-            _ = c.SDL_RenderClear(ren);
-            try screen.render(ren);
-            c.SDL_RenderPresent(ren);
         }
     }
 }
 
 const MenuScreen = struct {
+    allocator: *std.mem.Allocator,
     screen: Screen,
     gui: *c.KW_GUI,
 
-    fn init(gui: *c.KW_GUI) MenuScreen {
-        return MenuScreen{
-            .screen = Screen.init(update, render),
-            .gui = gui,
-        };
+    fn init(allocator: *std.mem.Allocator, gui: *c.KW_GUI) !*MenuScreen {
+        const self = try allocator.create(MenuScreen);
+        self.allocator = allocator;
+        self.screen = Screen.init(update, render, deinit);
+        self.gui = gui;
+        return self;
     }
 
     fn update(screen: *Screen, keys: [*]const u8) Transition {
@@ -134,14 +151,19 @@ const MenuScreen = struct {
 
         c.KW_ProcessEvents(self.gui);
         if (keys[sdl.scnFromKey(c.SDLK_ESCAPE)] == 1) {
-            return Transition{.PopScreen = {}};
+            return Transition{ .PopScreen = {} };
         }
-        return Transition{.None = {}};
+        return Transition{ .None = {} };
     }
 
     fn render(screen: *Screen, ren: *c.SDL_Renderer) anyerror!void {
         const self = @fieldParentPtr(MenuScreen, "screen", screen);
 
         c.KW_Paint(self.gui);
+    }
+
+    fn deinit(screen: *Screen) void {
+        const self = @fieldParentPtr(MenuScreen, "screen", screen);
+        self.allocator.destroy(self);
     }
 };
