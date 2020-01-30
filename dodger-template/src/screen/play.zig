@@ -21,9 +21,14 @@ const InputMap = struct {
 pub const PlayScreen = struct {
     allocator: *std.mem.Allocator,
     screen: Screen,
+    gui: *c.KW_GUI,
+    textBuf: []u8,
+    scoreLabel: *c.KW_Widget,
 
     const Self = @This();
 
+    lastLoopTime: u64,
+    score: f32,
     playerPhysics: physics.PhysicsComponent,
     playerAlive: bool,
     inputMap: InputMap,
@@ -36,6 +41,7 @@ pub const PlayScreen = struct {
         const self = try allocator.create(PlayScreen);
         self.allocator = allocator;
         self.screen = Screen{
+            .startFn = start,
             .onEventFn = onEvent,
             .updateFn = update,
             .renderFn = render,
@@ -48,6 +54,8 @@ pub const PlayScreen = struct {
         self.rand = std.rand.DefaultPrng.init(seed);
 
         self.allocator = allocator;
+        self.textBuf = allocator.alloc(u8, 50) catch unreachable;
+        self.score = 0;
         self.playerPhysics = physics.PhysicsComponent.init(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 32, 12, 26);
         self.playerAlive = true;
         self.inputMap = InputMap{
@@ -60,6 +68,17 @@ pub const PlayScreen = struct {
         self.world = World{ .leftWall = 0, .rightWall = SCREEN_WIDTH, .floor = SCREEN_HEIGHT - 16 };
 
         return self;
+    }
+
+    pub fn start(screen: *Screen, ctx: *Context) void {
+        const self = @fieldParentPtr(Self, "screen", screen);
+
+        self.lastLoopTime = std.time.milliTimestamp();
+        self.gui = c.KW_Init(ctx.kw_driver, ctx.kw_tileset) orelse unreachable;
+
+        const labelrect = c.KW_Rect{ .x = 0, .y = 0, .w = 100, .h = 30 };
+        var frame = c.KW_CreateFrame(self.gui, null, &labelrect);
+        self.scoreLabel = c.KW_CreateLabel(self.gui, frame, c"score", &labelrect).?;
     }
 
     fn onEvent(screen: *Screen, event: ScreenEvent) ?Transition {
@@ -80,6 +99,14 @@ pub const PlayScreen = struct {
         const self = @fieldParentPtr(Self, "screen", screen);
 
         if (self.playerAlive) {
+            const now = std.time.milliTimestamp();
+            const deltaTime = now - self.lastLoopTime;
+            self.lastLoopTime = std.time.milliTimestamp();
+            self.score += @intToFloat(f32, deltaTime) / std.time.ms_per_s;
+            const textSlice = std.fmt.bufPrint(self.textBuf, "{d:0.2}", self.score) catch unreachable;
+            self.textBuf[textSlice.len] = 0;
+            c.KW_SetLabelText(self.scoreLabel, textSlice.ptr);
+
             var goingLeft = keys[self.inputMap.left] == 1;
             var goingRight = keys[self.inputMap.right] == 1;
             if (goingLeft and !goingRight) {
@@ -130,6 +157,8 @@ pub const PlayScreen = struct {
             }
         }
 
+        c.KW_ProcessEvents(self.gui);
+
         return null;
     }
 
@@ -143,10 +172,17 @@ pub const PlayScreen = struct {
         for (self.enemies.toSlice()) |*enemy| {
             sdl.renderTexture(ren, enemy.breed.texture, enemy.physics.pos.x, enemy.physics.pos.y);
         }
+
+        c.KW_Paint(self.gui);
+    }
+
+    fn stop(screen: *Screen) void {
+        c.KW_Quit(self.gui);
     }
 
     fn deinit(screen: *Screen) void {
         const self = @fieldParentPtr(Self, "screen", screen);
+        self.allocator.free(self.textBuf);
         self.enemies.deinit();
         self.allocator.destroy(self);
     }
