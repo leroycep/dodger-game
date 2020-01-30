@@ -17,7 +17,23 @@ const fragmentSource: [*]const c.GLchar =
     c\\ }
 ;
 
+const Screen = struct {
+    renderFn: fn (self: *Screen, *c.SDL_Renderer) anyerror!void,
+
+    pub fn init(renderFn: fn (*Screen, *c.SDL_Renderer) anyerror!void) Screen {
+        return Screen{
+            .renderFn = renderFn,
+        };
+    }
+
+    pub fn render(self: *Screen, ren: *c.SDL_Renderer) !void {
+        return self.renderFn(self, ren);
+    }
+};
+
 pub fn main() !void {
+    const allocator = std.heap.direct_allocator;
+
     if (c.SDL_Init(c.SDL_INIT_VIDEO) != 0) {
         return sdl.logErr(error.InitFailed);
     }
@@ -43,20 +59,23 @@ pub fn main() !void {
     const set = c.KW_LoadSurface(kw_driver, c"lib/kiwi/examples/tileset/tileset.png");
     defer c.KW_ReleaseSurface(kw_driver, set);
 
-    const gui = c.KW_Init(kw_driver, set);
+    const gui = c.KW_Init(kw_driver, set) orelse {
+        return error.CouldntInitGUI;
+    };
     defer c.KW_Quit(gui);
 
-    const geometry = c.KW_Rect { .x = 0, .y = 0, .w = 320, .h = 240};
+    const geometry = c.KW_Rect{ .x = 0, .y = 0, .w = 320, .h = 240 };
     const frame = c.KW_CreateFrame(gui, null, &geometry);
 
     const label = c.KW_CreateLabel(gui, frame, c"Label with an icon :)", &geometry);
 
-    const iconrect = c.KW_Rect { .x = 0, .y = 48, .w = 24, .h = 24};
+    const iconrect = c.KW_Rect{ .x = 0, .y = 48, .w = 24, .h = 24 };
     c.KW_SetLabelIcon(label, &iconrect);
 
     var quit = false;
     var e: c.SDL_Event = undefined;
     const keys = c.SDL_GetKeyboardState(null);
+    var screen = &MenuScreen.init(gui).screen;
 
     while (!quit) {
         while (c.SDL_PollEvent(&e) != 0) {
@@ -70,9 +89,28 @@ pub fn main() !void {
             }
 
             _ = c.SDL_RenderClear(ren);
-            c.KW_ProcessEvents(gui);
-            c.KW_Paint(gui);
+            try screen.render(ren);
             c.SDL_RenderPresent(ren);
+            c.SDL_Delay(1);
         }
     }
 }
+
+const MenuScreen = struct {
+    screen: Screen,
+    gui: *c.KW_GUI,
+
+    fn init(gui: *c.KW_GUI) MenuScreen {
+        return MenuScreen{
+            .screen = Screen.init(render),
+            .gui = gui,
+        };
+    }
+
+    fn render(screen: *Screen, ren: *c.SDL_Renderer) anyerror!void {
+        const self = @fieldParentPtr(MenuScreen, "screen", screen);
+
+        c.KW_ProcessEvents(self.gui);
+        c.KW_Paint(self.gui);
+    }
+};
