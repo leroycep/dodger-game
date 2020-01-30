@@ -1,0 +1,65 @@
+const c = @import("../c.zig");
+const Context = @import("../context.zig").Context;
+
+pub const TransitionTag = enum {
+    PushScreen,
+    PopScreen,
+};
+
+pub const Transition = union(TransitionTag) {
+    PushScreen: *Screen,
+    PopScreen: void,
+};
+
+pub const ScreenEventTag = enum {
+    KeyPressed,
+};
+
+pub const ScreenEvent = union(ScreenEventTag) {
+    KeyPressed: c.SDL_Keycode,
+};
+
+pub const Screen = struct {
+    startFn: ?fn (self: *Screen, *Context) void = null,
+    onEventFn: ?fn (self: *Screen, event: ScreenEvent) ?Transition = null,
+    updateFn: ?fn (self: *Screen, keys: [*]const u8) ?Transition = null,
+    renderFn: fn (self: *Screen, *c.SDL_Renderer) anyerror!void,
+    stopFn: ?fn (self: *Screen, *Context) void = null,
+    deinitFn: ?fn (self: *Screen) void = null,
+
+    pub fn start(self: *Screen, ctx: *Context) void {
+        if (self.startFn) |func| {
+            return func(self, ctx);
+        }
+    }
+
+    pub fn onEvent(self: *Screen, event: ScreenEvent) ?Transition {
+        if (self.onEventFn) |func| {
+            return func(self, event);
+        }
+        return null;
+    }
+
+    pub fn update(self: *Screen, keys: [*]const u8) ?Transition {
+        if (self.updateFn) |func| {
+            return func(self, keys);
+        }
+        return null;
+    }
+
+    pub fn render(self: *Screen, ren: *c.SDL_Renderer) !void {
+        return self.renderFn(self, ren);
+    }
+
+    pub fn stop(self: *Screen, ctx: *Context) void {
+        if (self.stopFn) |func| {
+            return func(self, ctx);
+        }
+    }
+
+    pub fn deinit(self: *Screen) void {
+        if (self.deinitFn) |func| {
+            func(self);
+        }
+    }
+};

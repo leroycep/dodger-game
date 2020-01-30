@@ -1,3 +1,7 @@
 [submodule "template/lib/kiwi"]
 	path = template/lib/kiwi
 	url = git@github.com:mobius3/kiwi.git
+
+[submodule "dodger-template/lib/kiwi"]
+	path = template/lib/kiwi
+	url = git@github.com:mobius3/kiwi.git
