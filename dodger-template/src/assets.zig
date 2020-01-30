@@ -5,6 +5,7 @@ const c = @import("c.zig");
 const sdl = @import("sdl.zig");
 const EnemyBreed = @import("game/enemy.zig").EnemyBreed;
 const constants = @import("constants.zig");
+const Vec2 = @import("game/physics.zig").Vec2;
 
 pub const Assets = struct {
     textures: StringHashMap(*c.SDL_Texture),
@@ -40,5 +41,9 @@ pub fn initAssets(assets: *Assets, ren: *c.SDL_Renderer) !void {
     try assets.loadTexture(ren, "guy", c"assets/guy.png");
     try assets.loadTexture(ren, "badguy", c"assets/badguy.png");
 
-    _ = try assets.breeds.put("badguy", EnemyBreed{ .texture = assets.tex("badguy"), .ticksOnFloor = constants.ENEMY_TICKS_ON_FLOOR });
+    _ = try assets.breeds.put("badguy", EnemyBreed{
+        .texture = assets.tex("badguy"),
+        .ticksOnFloor = constants.ENEMY_TICKS_ON_FLOOR,
+        .collisionRectSize = Vec2{ .x = 27, .y = 28 },
+    });
 }

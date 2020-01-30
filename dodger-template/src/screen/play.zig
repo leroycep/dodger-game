@@ -82,7 +82,7 @@ pub const PlayScreen = struct {
         const labelrect = c.KW_Rect{ .x = 0, .y = 0, .w = 100, .h = 30 };
         self.scoreLabel = c.KW_CreateLabel(self.gui, frame, c"score", &labelrect).?;
 
-        const fpsrect = c.KW_Rect{ .x = SCREEN_WIDTH-100, .y = 0, .w = 100, .h = 30 };
+        const fpsrect = c.KW_Rect{ .x = SCREEN_WIDTH - 100, .y = 0, .w = 100, .h = 30 };
         self.fpsLabel = c.KW_CreateLabel(self.gui, frame, c"fps", &fpsrect).?;
     }
 
@@ -134,13 +134,8 @@ pub const PlayScreen = struct {
         }
 
         if (self.enemies.toSlice().len < self.maxEnemies) {
-            self.enemies.append(Enemy{
-                .breed = &ctx.assets.breeds.get("badguy").?.value,
-                .physics = physics.PhysicsComponent.init(0, SCREEN_HEIGHT + 32, 32, 32), // Start the enemy below the screen, so it will be picked up by the loop
-                .ticksLeftOnFloor = 0,
-            }) catch |_| {
-                // Do nothing
-            };
+            const enemy = self.enemies.addOne() catch unreachable;
+            ctx.assets.breeds.get("badguy").?.value.initEnemy(enemy);
         }
 
         for (self.enemies.toSlice()) |*enemy, i| {

@@ -1,9 +1,17 @@
 const c = @import("../c.zig");
-const PhysicsComponent = @import("physics.zig").PhysicsComponent;
+const physics = @import("physics.zig");
+const PhysicsComponent = physics.PhysicsComponent;
 
 pub const EnemyBreed = struct {
     texture: *c.SDL_Texture,
+    collisionRectSize: physics.Vec2,
     ticksOnFloor: u32,
+
+    fn initEnemy(self: *EnemyBreed, enemy: *Enemy) void {
+        enemy.breed = self;
+        enemy.physics = PhysicsComponent.init(0, 0, self.collisionRectSize.x, self.collisionRectSize.y);
+        enemy.ticksLeftOnFloor = 0;
+    }
 };
 
 pub const Enemy = struct {
