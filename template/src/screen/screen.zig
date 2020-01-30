@@ -1,4 +1,5 @@
 const c = @import("../c.zig");
+const Context = @import("../context.zig").Context;
 
 pub const TransitionTag = enum {
     PushScreen,
@@ -13,15 +14,15 @@ pub const Transition = union(TransitionTag) {
 };
 
 pub const Screen = struct {
-    startFn: ?fn (self: *Screen) void = null,
+    startFn: ?fn (self: *Screen, *Context) void = null,
     updateFn: fn (self: *Screen, keys: [*]const u8) Transition,
     renderFn: fn (self: *Screen, *c.SDL_Renderer) anyerror!void,
-    stopFn: ?fn (self: *Screen) void = null,
+    stopFn: ?fn (self: *Screen, *Context) void = null,
     deinitFn: ?fn (self: *Screen) void = null,
 
-    pub fn start(self: *Screen) void {
+    pub fn start(self: *Screen, ctx: *Context) void {
         if (self.startFn) |func| {
-            return func(self);
+            return func(self, ctx);
         }
     }
 
@@ -33,9 +34,9 @@ pub const Screen = struct {
         return self.renderFn(self, ren);
     }
 
-    pub fn stop(self: *Screen) void {
+    pub fn stop(self: *Screen, ctx: *Context) void {
         if (self.stopFn) |func| {
-            return func(self);
+            return func(self, ctx);
         }
     }
 
@@ -45,4 +46,3 @@ pub const Screen = struct {
         }
     }
 };
-

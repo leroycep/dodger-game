@@ -2,6 +2,7 @@ const std = @import("std");
 const c = @import("c.zig");
 const sdl = @import("sdl.zig");
 const screen = @import("screen.zig");
+const Context = @import("context.zig").Context;
 
 const vertexSource: [*]const u8 =
     c\\ attribute vec4 position;
@@ -46,31 +47,7 @@ pub fn main() !void {
     const set = c.KW_LoadSurface(kw_driver, c"lib/kiwi/examples/tileset/tileset.png");
     defer c.KW_ReleaseSurface(kw_driver, set);
 
-    const gui = c.KW_Init(kw_driver, set) orelse {
-        return error.CouldntInitGUI;
-    };
-    defer c.KW_Quit(gui);
-
-    var geometry = c.KW_Rect{ .x = 0, .y = 0, .w = 320, .h = 240 };
-    var frame = c.KW_CreateFrame(gui, null, &geometry);
-
-    var labelrect_ = c.KW_Rect{ .x = 0, .y = 0, .w = 320, .h = 100 };
-    const labelrect: [*c]c.KW_Rect = &labelrect_;
-    var playbuttonrect_: c.KW_Rect = c.KW_Rect{ .x = 0, .y = 0, .w = 320, .h = 100 };
-    const playbuttonrect: [*c]c.KW_Rect = &playbuttonrect_;
-
-    var rects_array = [_][*c]c.KW_Rect{ labelrect, playbuttonrect };
-    const rects = rects_array[0..2].ptr;
-
-    var weights_array = [_]c_uint{ 2, 1 };
-    const weights = weights_array[0..2].ptr;
-
-    c.KW_RectFillParentVertically(&geometry, rects, weights, 2, 10);
-    const label = c.KW_CreateLabel(gui, frame, c"Label with an icon :)", labelrect);
-    const playbutton = c.KW_CreateButtonAndLabel(gui, frame, c"Play", playbuttonrect) orelse unreachable;
-
-    const iconrect = c.KW_Rect{ .x = 0, .y = 48, .w = 24, .h = 24 };
-    c.KW_SetLabelIcon(label, &iconrect);
+    var ctx = Context{ .win = win, .kw_driver = kw_driver, .kw_tileset = set };
 
     var quit = false;
     var screenStarted = false;
@@ -78,12 +55,12 @@ pub fn main() !void {
     const keys = c.SDL_GetKeyboardState(null);
 
     var screens = std.ArrayList(*screen.Screen).init(allocator);
-    try screens.append(&(try screen.menu.MenuScreen.init(allocator, gui, playbutton)).screen);
+    try screens.append(&(try screen.menu.MenuScreen.init(allocator)).screen);
 
     while (!quit) {
         const currentScreen = screens.toSlice()[screens.len - 1];
         if (!screenStarted) {
-            currentScreen.start();
+            currentScreen.start(&ctx);
             screenStarted = true;
         }
 
@@ -101,12 +78,12 @@ pub fn main() !void {
 
         switch (transition) {
             .PushScreen => |newScreen| {
-                currentScreen.stop();
+                currentScreen.stop(&ctx);
                 try screens.append(newScreen);
                 screenStarted = false;
             },
             .PopScreen => {
-                currentScreen.stop();
+                currentScreen.stop(&ctx);
                 screens.pop().deinit();
                 if (screens.len == 0) {
                     quit = true;
@@ -117,4 +94,3 @@ pub fn main() !void {
         }
     }
 }
-
