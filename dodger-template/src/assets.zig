@@ -8,21 +8,22 @@ const constants = @import("constants.zig");
 const Vec2 = @import("game/physics.zig").Vec2;
 
 pub const Assets = struct {
-    textures: StringHashMap(*c.SDL_Texture),
+    textures: StringHashMap(*c.GPU_Image),
     breeds: StringHashMap(EnemyBreed),
 
     pub fn init(allocator: *Allocator) Assets {
         return Assets{
-            .textures = StringHashMap(*c.SDL_Texture).init(allocator),
+            .textures = StringHashMap(*c.GPU_Image).init(allocator),
             .breeds = StringHashMap(EnemyBreed).init(allocator),
         };
     }
 
-    pub fn loadTexture(self: *Assets, ren: *c.SDL_Renderer, name: []const u8, filepath: [*]const u8) !void {
-        _ = try self.textures.put(name, try sdl.loadTexture(ren, filepath));
+    pub fn loadTexture(self: *Assets, name: []const u8, filepath: [*]const u8) !void {
+        const image = c.GPU_LoadImage(filepath);
+        _ = try self.textures.put(name, image);
     }
 
-    pub fn tex(self: *Assets, name: []const u8) *c.SDL_Texture {
+    pub fn tex(self: *Assets, name: []const u8) *c.GPU_Image {
         return self.textures.get(name).?.value;
     }
 
@@ -36,10 +37,10 @@ pub const Assets = struct {
     }
 };
 
-pub fn initAssets(assets: *Assets, ren: *c.SDL_Renderer) !void {
-    try assets.loadTexture(ren, "background", c"assets/background.png");
-    try assets.loadTexture(ren, "guy", c"assets/guy.png");
-    try assets.loadTexture(ren, "badguy", c"assets/badguy.png");
+pub fn initAssets(assets: *Assets) !void {
+    try assets.loadTexture("background", c"assets/background.png");
+    try assets.loadTexture("guy", c"assets/guy.png");
+    try assets.loadTexture("badguy", c"assets/badguy.png");
 
     _ = try assets.breeds.put("badguy", EnemyBreed{
         .texture = assets.tex("badguy"),

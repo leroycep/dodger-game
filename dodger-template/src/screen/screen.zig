@@ -23,7 +23,7 @@ pub const Screen = struct {
     startFn: ?fn (self: *Screen, *Context) void = null,
     onEventFn: ?fn (self: *Screen, event: ScreenEvent) ?Transition = null,
     updateFn: ?fn (self: *Screen, *Context, keys: [*]const u8) ?Transition = null,
-    renderFn: fn (self: *Screen, *Context, *c.SDL_Renderer) anyerror!void,
+    renderFn: fn (self: *Screen, *Context, *c.GPU_Target) anyerror!void,
     stopFn: ?fn (self: *Screen, *Context) void = null,
     deinitFn: ?fn (self: *Screen) void = null,
 
@@ -47,8 +47,8 @@ pub const Screen = struct {
         return null;
     }
 
-    pub fn render(self: *Screen, ctx: *Context, ren: *c.SDL_Renderer) !void {
-        return self.renderFn(self, ctx, ren);
+    pub fn render(self: *Screen, ctx: *Context, gpuTarget: *c.GPU_Target) !void {
+        return self.renderFn(self, ctx, gpuTarget);
     }
 
     pub fn stop(self: *Screen, ctx: *Context) void {

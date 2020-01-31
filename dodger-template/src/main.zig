@@ -36,16 +36,16 @@ pub fn main() !void {
     // const set = c.KW_LoadSurface(kw_driver, c"../lib/kiwi/examples/tileset/tileset.png");
     // defer c.KW_ReleaseSurface(kw_driver, set);
 
-    // const assetsStruct = &assets.Assets.init(allocator);
-    // try assets.initAssets(assetsStruct, ren);
+    const assetsStruct = &assets.Assets.init(allocator);
+    try assets.initAssets(assetsStruct);
 
-    // var ctx = Context{
-    //     .win = win,
-    //     .kw_driver = kw_driver,
-    //     .kw_tileset = set,
-    //     .assets = assetsStruct,
-    //     .fps = 0,
-    // };
+    var ctx = Context{
+        .win = win,
+        //     .kw_driver = kw_driver,
+        //    .kw_tileset = set,
+        .assets = assetsStruct,
+        .fps = 0,
+    };
 
     var quit = false;
     var screenStarted = false;
@@ -53,14 +53,14 @@ pub fn main() !void {
     const keys = c.SDL_GetKeyboardState(null);
 
     var screens = std.ArrayList(*screen.Screen).init(allocator);
-    try screens.append(&(try screen.menu.MenuScreen.init(allocator)).screen);
+    try screens.append(&(try screen.play.PlayScreen.init(allocator)).screen);
 
     var frame_timer = try std.time.Timer.start();
 
     while (!quit) {
         const currentScreen = screens.toSlice()[screens.len - 1];
         if (!screenStarted) {
-            // currentScreen.start(&ctx);
+            currentScreen.start(&ctx);
             screenStarted = true;
         }
 
@@ -77,17 +77,17 @@ pub fn main() !void {
             }
 
             if (frame_timer.read() >= FRAME_TIME) {
-                // if (currentScreen.update(&ctx, keys)) |transition| {
-                //     break :update transition;
-                // }
-                // ctx.fps = (ctx.fps + @intToFloat(f32, std.time.ns_per_s) / @intToFloat(f32, frame_timer.read())) / 2;
+                if (currentScreen.update(&ctx, keys)) |transition| {
+                    break :update transition;
+                }
+                ctx.fps = (ctx.fps + @intToFloat(f32, std.time.ns_per_s) / @intToFloat(f32, frame_timer.read())) / 2;
                 frame_timer.reset();
             }
             break :update null;
         };
 
         c.GPU_Clear(gpuTarget);
-        // try currentScreen.render(&ctx, ren);
+        try currentScreen.render(&ctx, gpuTarget);
         c.GPU_Flip(gpuTarget);
 
         if (transition) |t| {

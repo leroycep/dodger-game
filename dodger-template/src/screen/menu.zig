@@ -92,7 +92,7 @@ pub const MenuScreen = struct {
         return null;
     }
 
-    fn render(screen: *Screen, ctx: *Context, ren: *c.SDL_Renderer) anyerror!void {
+    fn render(screen: *Screen, ctx: *Context, gpu: *c.GPU_Target) anyerror!void {
         const self = @fieldParentPtr(Self, "screen", screen);
 
         c.KW_Paint(self.gui);

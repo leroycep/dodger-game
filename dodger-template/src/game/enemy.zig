@@ -3,7 +3,7 @@ const physics = @import("physics.zig");
 const PhysicsComponent = physics.PhysicsComponent;
 
 pub const EnemyBreed = struct {
-    texture: *c.SDL_Texture,
+    texture: *c.GPU_Image,
     collisionRectSize: physics.Vec2,
     ticksOnFloor: u32,
 
