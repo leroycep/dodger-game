@@ -1,11 +1,14 @@
+const std = @import("std");
+const Allocator = std.mem.Allocator;
 usingnamespace @import("c.zig");
 
 pub const KW_GPU_RenderDriver = struct {
     driver: KW_RenderDriver,
+    allocator: *Allocator,
 
     const Self = @This();
 
-    pub fn init() Self {
+    pub fn init(allocator: *Allocator) Self {
         const driver = KW_RenderDriver{
             .renderCopy = renderCopy,
             .renderText = renderText,
@@ -38,6 +41,7 @@ pub const KW_GPU_RenderDriver = struct {
             .priv = null,
         };
         return Self{
+            .allocator = allocator,
             .driver = driver,
         };
     }
@@ -94,7 +98,11 @@ pub const KW_GPU_RenderDriver = struct {
 
     extern fn loadSurface(driver: ?*KW_RenderDriver, file: ?*const u8) ?*KW_Surface {
         const self = @fieldParentPtr(Self, "driver", driver.?);
-        return null;
+
+        const kw_surface = self.allocator.create(KW_Surface) catch return null;
+        kw_surface.surface = GPU_LoadSurface(file);
+
+        return kw_surface;
     }
 
     extern fn releaseTexture(driver: ?*KW_RenderDriver, texture: ?*KW_Texture) void {

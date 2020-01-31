@@ -31,21 +31,21 @@ pub fn main() !void {
     //     return sdl.logErr(error.ImgInit);
     // }
 
-    var kw_driver = kw_renderdriver.KW_GPU_RenderDriver.init();
-    defer c.KW_ReleaseRenderDriver(&kw_driver.driver);
+    var kw_driver = &kw_renderdriver.KW_GPU_RenderDriver.init(allocator).driver;
+    defer c.KW_ReleaseRenderDriver(kw_driver);
     // const kw_driver = c.KW_CreateSDL2RenderDriver(ren, win);
     // defer c.KW_ReleaseRenderDriver(kw_driver);
 
-    // const set = c.KW_LoadSurface(kw_driver, c"../lib/kiwi/examples/tileset/tileset.png");
-    // defer c.KW_ReleaseSurface(kw_driver, set);
+    const set = c.KW_LoadSurface(kw_driver, c"../lib/kiwi/examples/tileset/tileset.png");
+    defer c.KW_ReleaseSurface(kw_driver, set);
 
     const assetsStruct = &assets.Assets.init(allocator);
     try assets.initAssets(assetsStruct);
 
     var ctx = Context{
         .win = win,
-        //     .kw_driver = kw_driver,
-        //    .kw_tileset = set,
+        .kw_driver = kw_driver,
+        .kw_tileset = set,
         .assets = assetsStruct,
         .fps = 0,
     };
@@ -56,7 +56,7 @@ pub fn main() !void {
     const keys = c.SDL_GetKeyboardState(null);
 
     var screens = std.ArrayList(*screen.Screen).init(allocator);
-    try screens.append(&(try screen.play.PlayScreen.init(allocator)).screen);
+    try screens.append(&(try screen.menu.MenuScreen.init(allocator)).screen);
 
     var frame_timer = try std.time.Timer.start();
 
