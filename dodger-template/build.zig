@@ -17,7 +17,7 @@ pub fn build(b: *Builder) void {
     exe.linkSystemLibrary("SDL2");
     exe.linkSystemLibrary("SDL2_image");
     exe.linkSystemLibrary("SDL2_ttf");
-    exe.linkSystemLibrary("GLESv2");
+    exe.linkSystemLibrary("SDL2_gpu");
     exe.linkSystemLibrary("c");
     exe.addIncludeDir(KIWI_SOURCE_PATH);
     exe.addIncludeDir(file2c_output_dir);
