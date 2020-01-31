@@ -96,12 +96,12 @@ pub fn main() !void {
         if (transition) |t| {
             switch (t) {
                 .PushScreen => |newScreen| {
-                    // currentScreen.stop(&ctx);
+                    currentScreen.stop(&ctx);
                     try screens.append(newScreen);
                     screenStarted = false;
                 },
                 .PopScreen => {
-                    // currentScreen.stop(&ctx);
+                    currentScreen.stop(&ctx);
                     screens.pop().deinit();
                     if (screens.len == 0) {
                         quit = true;
