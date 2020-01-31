@@ -1,4 +1,4 @@
-usingnamespace @cImport({
+pub usingnamespace @cImport({
     @cInclude("SDL2/SDL.h");
     // @cInclude("SDL_image.h");
     @cInclude("SDL2/SDL_gpu.h");
@@ -8,4 +8,5 @@ usingnamespace @cImport({
     @cInclude("KW_frame.h");
     @cInclude("KW_label.h");
     @cInclude("KW_button.h");
+    @cInclude("KW_renderdriver.h");
 });

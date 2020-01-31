@@ -1,7 +1,4 @@
 usingnamespace @import("c.zig");
-usingnamespace @cImport({
-    @cInclude("KW_renderdriver.h");
-});
 
 pub const KW_GPU_RenderDriver = struct {
     driver: KW_RenderDriver,

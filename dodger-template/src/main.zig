@@ -31,7 +31,8 @@ pub fn main() !void {
     //     return sdl.logErr(error.ImgInit);
     // }
 
-    const kw_driver = kw_renderdriver.KW_GPU_RenderDriver.init();
+    var kw_driver = kw_renderdriver.KW_GPU_RenderDriver.init();
+    defer c.KW_ReleaseRenderDriver(&kw_driver.driver);
     // const kw_driver = c.KW_CreateSDL2RenderDriver(ren, win);
     // defer c.KW_ReleaseRenderDriver(kw_driver);
 
