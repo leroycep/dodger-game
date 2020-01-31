@@ -17,7 +17,7 @@ in
       freetype
       python3
       expat
-      SDL2 SDL2_image SDL2_ttf
+      SDL2 SDL2_image SDL2_ttf SDL_gpu
       ];
     shellHook = ''
       export RUST_BACKTRACE=1
