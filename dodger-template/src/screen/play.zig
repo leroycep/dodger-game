@@ -37,6 +37,7 @@ pub const PlayScreen = struct {
     maxEnemies: usize,
     world: World,
     rand: std.rand.DefaultPrng,
+    death_start: u64,
 
     pub fn init(allocator: *std.mem.Allocator) !*Self {
         const self = try allocator.create(PlayScreen);
@@ -156,8 +157,15 @@ pub const PlayScreen = struct {
             enemy.physics.applyGravity();
             enemy.physics.update(&self.world);
 
-            if (enemy.physics.intersects(&self.playerPhysics)) {
+            if (enemy.physics.intersects(&self.playerPhysics) and self.playerAlive) {
                 self.playerAlive = false;
+                self.death_start = std.time.milliTimestamp();
+            }
+        }
+
+        if (!self.playerAlive) {
+            if (std.time.milliTimestamp() - self.death_start > 1000) {
+                return Transition{.PopScreen = {}};
             }
         }
 
