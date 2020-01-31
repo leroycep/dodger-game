@@ -111,6 +111,10 @@ pub const KW_GPU_RenderDriver = struct {
 
     extern fn releaseSurface(driver: ?*KW_RenderDriver, surface: ?*KW_Surface) void {
         const self = @fieldParentPtr(Self, "driver", driver.?);
+        if (surface) |surf| {
+            SDL_FreeSurface(@ptrCast(*SDL_Surface, @alignCast(@alignOf(*SDL_Surface), surf.surface)));
+            self.allocator.destroy(surf);
+        }
     }
 
     extern fn releaseFont(driver: ?*KW_RenderDriver, font: ?*KW_Font) void {
