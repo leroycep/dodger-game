@@ -1,4 +1,5 @@
 const std = @import("std");
+const builtin = @import("builtin");
 const c = @import("c.zig");
 const sdl = @import("sdl.zig");
 const screen = @import("screen.zig");
@@ -19,31 +20,32 @@ pub fn main() !void {
     };
     defer c.SDL_DestroyWindow(win);
 
-    const ren = c.SDL_CreateRenderer(win, -1, c.SDL_RENDERER_ACCELERATED | c.SDL_RENDERER_PRESENTVSYNC) orelse {
-        return sdl.logErr(error.CouldntCreateRenderer);
-    };
-    defer c.SDL_DestroyRenderer(ren);
+    const winId = c.SDL_GetWindowID(win);
 
-    if ((c.IMG_Init(c.IMG_INIT_PNG) & c.IMG_INIT_PNG) != c.IMG_INIT_PNG) {
-        return sdl.logErr(error.ImgInit);
-    }
+    c.GPU_SetInitWindow(winId);
+    const gpuTarget = c.GPU_Init(SCREEN_WIDTH, SCREEN_HEIGHT, c.GPU_DEFAULT_INIT_FLAGS);
+    defer c.GPU_Quit();
 
-    const kw_driver = c.KW_CreateSDL2RenderDriver(ren, win);
-    defer c.KW_ReleaseRenderDriver(kw_driver);
+    // if ((c.IMG_Init(c.IMG_INIT_PNG) & c.IMG_INIT_PNG) != c.IMG_INIT_PNG) {
+    //     return sdl.logErr(error.ImgInit);
+    // }
 
-    const set = c.KW_LoadSurface(kw_driver, c"../lib/kiwi/examples/tileset/tileset.png");
-    defer c.KW_ReleaseSurface(kw_driver, set);
+    // const kw_driver = c.KW_CreateSDL2RenderDriver(ren, win);
+    // defer c.KW_ReleaseRenderDriver(kw_driver);
 
-    const assetsStruct = &assets.Assets.init(allocator);
-    try assets.initAssets(assetsStruct, ren);
+    // const set = c.KW_LoadSurface(kw_driver, c"../lib/kiwi/examples/tileset/tileset.png");
+    // defer c.KW_ReleaseSurface(kw_driver, set);
 
-    var ctx = Context{
-        .win = win,
-        .kw_driver = kw_driver,
-        .kw_tileset = set,
-        .assets = assetsStruct,
-        .fps = 0,
-    };
+    // const assetsStruct = &assets.Assets.init(allocator);
+    // try assets.initAssets(assetsStruct, ren);
+
+    // var ctx = Context{
+    //     .win = win,
+    //     .kw_driver = kw_driver,
+    //     .kw_tileset = set,
+    //     .assets = assetsStruct,
+    //     .fps = 0,
+    // };
 
     var quit = false;
     var screenStarted = false;
@@ -58,7 +60,7 @@ pub fn main() !void {
     while (!quit) {
         const currentScreen = screens.toSlice()[screens.len - 1];
         if (!screenStarted) {
-            currentScreen.start(&ctx);
+            // currentScreen.start(&ctx);
             screenStarted = true;
         }
 
@@ -75,28 +77,28 @@ pub fn main() !void {
             }
 
             if (frame_timer.read() >= FRAME_TIME) {
-                if (currentScreen.update(&ctx, keys)) |transition| {
-                    break :update transition;
-                }
-                ctx.fps = (ctx.fps + @intToFloat(f32, std.time.ns_per_s) / @intToFloat(f32, frame_timer.read())) / 2;
+                // if (currentScreen.update(&ctx, keys)) |transition| {
+                //     break :update transition;
+                // }
+                // ctx.fps = (ctx.fps + @intToFloat(f32, std.time.ns_per_s) / @intToFloat(f32, frame_timer.read())) / 2;
                 frame_timer.reset();
             }
             break :update null;
         };
 
-        _ = c.SDL_RenderClear(ren);
-        try currentScreen.render(&ctx, ren);
-        c.SDL_RenderPresent(ren);
+        c.GPU_Clear(gpuTarget);
+        // try currentScreen.render(&ctx, ren);
+        c.GPU_Flip(gpuTarget);
 
         if (transition) |t| {
             switch (t) {
                 .PushScreen => |newScreen| {
-                    currentScreen.stop(&ctx);
+                    // currentScreen.stop(&ctx);
                     try screens.append(newScreen);
                     screenStarted = false;
                 },
                 .PopScreen => {
-                    currentScreen.stop(&ctx);
+                    // currentScreen.stop(&ctx);
                     screens.pop().deinit();
                     if (screens.len == 0) {
                         quit = true;
