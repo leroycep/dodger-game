@@ -5,10 +5,11 @@ usingnamespace @import("c.zig");
 pub const KW_GPU_RenderDriver = struct {
     driver: KW_RenderDriver,
     allocator: *Allocator,
+    gpuTarget: *GPU_Target,
 
     const Self = @This();
 
-    pub fn init(allocator: *Allocator) Self {
+    pub fn init(allocator: *Allocator, gpuTarget: *GPU_Target) Self {
         const driver = KW_RenderDriver{
             .renderCopy = renderCopy,
             .renderText = renderText,
@@ -43,11 +44,27 @@ pub const KW_GPU_RenderDriver = struct {
         return Self{
             .allocator = allocator,
             .driver = driver,
+            .gpuTarget = gpuTarget,
         };
     }
 
-    extern fn renderRect(driver: ?*KW_RenderDriver, rect: ?*KW_Rect, color: KW_Color) void {
+    extern fn renderRect(driver: ?*KW_RenderDriver, kw_rectOpt: ?*KW_Rect, kw_color: KW_Color) void {
         const self = @fieldParentPtr(Self, "driver", driver.?);
+        if (kw_rectOpt) |kw_rect| {
+            const color = SDL_Color{
+                .r = kw_color.r,
+                .g = kw_color.g,
+                .b = kw_color.b,
+                .a = kw_color.a,
+            };
+            const rect = GPU_Rect{
+                .x = @intToFloat(f32, kw_rect.x),
+                .y = @intToFloat(f32, kw_rect.y),
+                .w = @intToFloat(f32, kw_rect.w),
+                .h = @intToFloat(f32, kw_rect.h),
+            };
+            GPU_RectangleFilled(self.gpuTarget, rect.x, rect.y, rect.w, rect.h, color);
+        }
     }
 
     extern fn blitSurface(driver: ?*KW_RenderDriver, src: ?*KW_Surface, srcRect: ?*const KW_Rect, dst: ?*KW_Surface, dstRect: ?*const KW_Rect) void {
