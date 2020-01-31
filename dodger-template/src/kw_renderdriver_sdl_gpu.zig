@@ -67,8 +67,34 @@ pub const KW_GPU_RenderDriver = struct {
         }
     }
 
-    extern fn blitSurface(driver: ?*KW_RenderDriver, src: ?*KW_Surface, srcRect: ?*const KW_Rect, dst: ?*KW_Surface, dstRect: ?*const KW_Rect) void {
+    extern fn blitSurface(driver: ?*KW_RenderDriver, srcOpt: ?*KW_Surface, srcRectOpt: ?*const KW_Rect, dstOpt: ?*KW_Surface, dstRectOpt: ?*const KW_Rect) void {
         const self = @fieldParentPtr(Self, "driver", driver.?);
+        const kw_src = srcOpt orelse return;
+        const srcRect = srcRectOpt orelse return;
+        const kw_dst = dstOpt orelse return;
+        const dstRect = dstRectOpt orelse return;
+
+        var s = SDL_Rect{
+            .x = srcRect.x,
+            .y = srcRect.y,
+            .w = srcRect.w,
+            .h = srcRect.h,
+        };
+        var d = SDL_Rect{
+            .x = dstRect.x,
+            .y = dstRect.y,
+            .w = dstRect.w,
+            .h = dstRect.h,
+        };
+
+        const src = castSurface(kw_src.surface);
+        const dst = castSurface(kw_dst.surface);
+
+        if (d.w != s.w or d.h != s.h) {
+            _ = SDL_BlitScaled(src, &s, dst, &d);
+        } else {
+            _ = SDL_BlitSurface(src, &s, dst, &d);
+        }
     }
 
     extern fn createSurface(driver: ?*KW_RenderDriver, width: c_uint, height: c_uint) ?*KW_Surface {
@@ -164,3 +190,7 @@ pub const KW_GPU_RenderDriver = struct {
         return 0;
     }
 };
+
+fn castSurface(ptr: *c_void) *SDL_Surface {
+    return @ptrCast(*SDL_Surface, @alignCast(@alignOf(*SDL_Surface), ptr));
+}
