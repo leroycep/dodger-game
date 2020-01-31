@@ -8,5 +8,4 @@ usingnamespace @cImport({
     @cInclude("KW_frame.h");
     @cInclude("KW_label.h");
     @cInclude("KW_button.h");
-    @cInclude("KW_renderdriver_sdl2.h");
 });

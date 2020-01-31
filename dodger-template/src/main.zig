@@ -5,6 +5,7 @@ const sdl = @import("sdl.zig");
 const screen = @import("screen.zig");
 const Context = @import("context.zig").Context;
 const assets = @import("assets.zig");
+const kw_renderdriver = @import("kw_renderdriver_sdl_gpu.zig");
 usingnamespace @import("constants.zig");
 
 pub fn main() !void {
@@ -30,6 +31,7 @@ pub fn main() !void {
     //     return sdl.logErr(error.ImgInit);
     // }
 
+    const kw_driver = kw_renderdriver.KW_GPU_RenderDriver.init();
     // const kw_driver = c.KW_CreateSDL2RenderDriver(ren, win);
     // defer c.KW_ReleaseRenderDriver(kw_driver);
 
