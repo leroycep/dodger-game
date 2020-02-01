@@ -141,8 +141,8 @@ pub const KW_GPU_RenderDriver = struct {
 
     extern fn loadFontFromMemory(driver: ?*KW_RenderDriver, fontMemory: ?*const c_void, memSize: c_ulong, ptSize: c_uint) ?*KW_Font {
         const self = @fieldParentPtr(Self, "driver", driver.?);
-        // TODO
-        return null;
+        const fontOpt = TTF_OpenFontRW(SDL_RWFromConstMem(fontMemory, @intCast(c_int, memSize)), SDL_FALSE, @intCast(c_int, ptSize));
+        return self.wrapFont(fontOpt);
     }
 
     extern fn createTexture(driver: ?*KW_RenderDriver, surface: ?*KW_Surface) ?*KW_Texture {
