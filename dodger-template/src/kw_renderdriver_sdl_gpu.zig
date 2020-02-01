@@ -103,14 +103,25 @@ pub const KW_GPU_RenderDriver = struct {
         return null;
     }
 
-    extern fn getSurfaceExtents(driver: ?*KW_RenderDriver, surface: ?*const KW_Surface, width: ?*c_uint, height: ?*c_uint) void {
+    extern fn getSurfaceExtents(driver: ?*KW_RenderDriver, surfaceOpt: ?*const KW_Surface, widthOpt: ?*c_uint, heightOpt: ?*c_uint) void {
         const self = @fieldParentPtr(Self, "driver", driver.?);
-        // TODO
+
+        const kw_surface = surfaceOpt orelse return;
+        const surface = castSurface(kw_surface.surface orelse return);
+        var width = widthOpt orelse return;
+        var height = heightOpt orelse return;
+        width.* = @intCast(c_uint, surface.w);
+        height.* = @intCast(c_uint, surface.h);
     }
 
-    extern fn getTextureExtents(driver: ?*KW_RenderDriver, texture: ?*KW_Texture, width: ?*c_uint, height: ?*c_uint) void {
+    extern fn getTextureExtents(driver: ?*KW_RenderDriver, textureOpt: ?*KW_Texture, widthOpt: ?*c_uint, heightOpt: ?*c_uint) void {
         const self = @fieldParentPtr(Self, "driver", driver.?);
-        // TODO
+        const kw_texture = textureOpt orelse return;
+        const texture = castImage(kw_texture.texture orelse return);
+        var width = widthOpt orelse return;
+        var height = heightOpt orelse return;
+        width.* = texture.w;
+        height.* = texture.h;
     }
 
     extern fn renderCopy(driver: ?*KW_RenderDriver, textureOpt: ?*KW_Texture, clipOpt: ?*const KW_Rect, dstOpt: ?*const KW_Rect) void {
