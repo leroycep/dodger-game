@@ -21,10 +21,10 @@ const InputMap = struct {
 pub const PlayScreen = struct {
     allocator: *std.mem.Allocator,
     screen: Screen,
-    // gui: *c.KW_GUI,
-    // textBuf: []u8,
-    // scoreLabel: *c.KW_Widget,
-    // fpsLabel: *c.KW_Widget,
+    gui: *c.KW_GUI,
+    textBuf: []u8,
+    scoreLabel: *c.KW_Widget,
+    fpsLabel: *c.KW_Widget,
 
     const Self = @This();
 
@@ -56,7 +56,7 @@ pub const PlayScreen = struct {
         self.rand = std.rand.DefaultPrng.init(seed);
 
         self.allocator = allocator;
-        // self.textBuf = allocator.alloc(u8, 50) catch unreachable;
+        self.textBuf = allocator.alloc(u8, 50) catch unreachable;
         self.score = 0;
         self.playerPhysics = physics.PhysicsComponent.init(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 32, 12, 26);
         self.playerAlive = true;
@@ -76,15 +76,15 @@ pub const PlayScreen = struct {
         const self = @fieldParentPtr(Self, "screen", screen);
 
         self.lastLoopTime = std.time.milliTimestamp();
-        // self.gui = c.KW_Init(ctx.kw_driver, ctx.kw_tileset) orelse unreachable;
+        self.gui = c.KW_Init(ctx.kw_driver, ctx.kw_tileset) orelse unreachable;
 
-        // const framerect = c.KW_Rect{ .x = 0, .y = 0, .w = SCREEN_WIDTH, .h = 30 };
-        // var frame = c.KW_CreateFrame(self.gui, null, &framerect);
-        // const labelrect = c.KW_Rect{ .x = 0, .y = 0, .w = 100, .h = 30 };
-        // self.scoreLabel = c.KW_CreateLabel(self.gui, frame, c"score", &labelrect).?;
+        const framerect = c.KW_Rect{ .x = 0, .y = 0, .w = SCREEN_WIDTH, .h = 30 };
+        var frame = c.KW_CreateFrame(self.gui, null, &framerect);
+        const labelrect = c.KW_Rect{ .x = 0, .y = 0, .w = 100, .h = 30 };
+        self.scoreLabel = c.KW_CreateLabel(self.gui, frame, c"score", &labelrect).?;
 
-        // const fpsrect = c.KW_Rect{ .x = SCREEN_WIDTH - 100, .y = 0, .w = 100, .h = 30 };
-        // self.fpsLabel = c.KW_CreateLabel(self.gui, frame, c"fps", &fpsrect).?;
+        const fpsrect = c.KW_Rect{ .x = SCREEN_WIDTH - 100, .y = 0, .w = 100, .h = 30 };
+        self.fpsLabel = c.KW_CreateLabel(self.gui, frame, c"fps", &fpsrect).?;
     }
 
     fn onEvent(screen: *Screen, event: ScreenEvent) ?Transition {
@@ -104,18 +104,18 @@ pub const PlayScreen = struct {
     fn update(screen: *Screen, ctx: *Context, keys: [*]const u8) ?Transition {
         const self = @fieldParentPtr(Self, "screen", screen);
 
-        // const fpsTextSlice = std.fmt.bufPrint(self.textBuf, "FPS: {d:0.2}", ctx.fps) catch unreachable;
-        // self.textBuf[fpsTextSlice.len] = 0;
-        // c.KW_SetLabelText(self.fpsLabel, fpsTextSlice.ptr);
+        const fpsTextSlice = std.fmt.bufPrint(self.textBuf, "FPS: {d:0.2}", ctx.fps) catch unreachable;
+        self.textBuf[fpsTextSlice.len] = 0;
+        c.KW_SetLabelText(self.fpsLabel, fpsTextSlice.ptr);
 
         if (self.playerAlive) {
             const now = std.time.milliTimestamp();
             const deltaTime = now - self.lastLoopTime;
             self.lastLoopTime = std.time.milliTimestamp();
             self.score += @intToFloat(f32, deltaTime) / std.time.ms_per_s;
-            // const textSlice = std.fmt.bufPrint(self.textBuf, "{d:0.2}", self.score) catch unreachable;
-            // self.textBuf[textSlice.len] = 0;
-            // c.KW_SetLabelText(self.scoreLabel, textSlice.ptr);
+            const textSlice = std.fmt.bufPrint(self.textBuf, "{d:0.2}", self.score) catch unreachable;
+            self.textBuf[textSlice.len] = 0;
+            c.KW_SetLabelText(self.scoreLabel, textSlice.ptr);
 
             var goingLeft = keys[self.inputMap.left] == 1;
             var goingRight = keys[self.inputMap.right] == 1;
@@ -169,7 +169,7 @@ pub const PlayScreen = struct {
             }
         }
 
-        // c.KW_ProcessEvents(self.gui);
+        c.KW_ProcessEvents(self.gui);
 
         return null;
     }
@@ -185,16 +185,16 @@ pub const PlayScreen = struct {
             c.GPU_Blit(enemy.breed.texture, null, gpuTarget, enemy.physics.pos.x, enemy.physics.pos.y);
         }
 
-        // c.KW_Paint(self.gui);
+        c.KW_Paint(self.gui);
     }
 
     fn stop(screen: *Screen) void {
-        // c.KW_Quit(self.gui);
+        c.KW_Quit(self.gui);
     }
 
     fn deinit(screen: *Screen) void {
         const self = @fieldParentPtr(Self, "screen", screen);
-        // self.allocator.free(self.textBuf);
+        self.allocator.free(self.textBuf);
         self.enemies.deinit();
         self.allocator.destroy(self);
     }
