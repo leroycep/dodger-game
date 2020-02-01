@@ -18,6 +18,7 @@ in
       python3
       expat
       SDL2 SDL2_image SDL2_ttf SDL_gpu
+      sqlite
       ];
     shellHook = ''
       export RUST_BACKTRACE=1
