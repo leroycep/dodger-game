@@ -216,7 +216,10 @@ pub const KW_GPU_RenderDriver = struct {
 
     extern fn releaseTexture(driver: ?*KW_RenderDriver, texture: ?*KW_Texture) void {
         const self = @fieldParentPtr(Self, "driver", driver.?);
-        // TODO
+        if (texture) |kw_texture| {
+            GPU_FreeImage(castImage(kw_texture.texture));
+            self.allocator.destroy(kw_texture);
+        }
     }
 
     extern fn releaseSurface(driver: ?*KW_RenderDriver, surface: ?*KW_Surface) void {
