@@ -99,15 +99,18 @@ pub const KW_GPU_RenderDriver = struct {
 
     extern fn createSurface(driver: ?*KW_RenderDriver, width: c_uint, height: c_uint) ?*KW_Surface {
         const self = @fieldParentPtr(Self, "driver", driver.?);
+        // TODO
         return null;
     }
 
     extern fn getSurfaceExtents(driver: ?*KW_RenderDriver, surface: ?*const KW_Surface, width: ?*c_uint, height: ?*c_uint) void {
         const self = @fieldParentPtr(Self, "driver", driver.?);
+        // TODO
     }
 
     extern fn getTextureExtents(driver: ?*KW_RenderDriver, texture: ?*KW_Texture, width: ?*c_uint, height: ?*c_uint) void {
         const self = @fieldParentPtr(Self, "driver", driver.?);
+        // TODO
     }
 
     extern fn renderCopy(driver: ?*KW_RenderDriver, textureOpt: ?*KW_Texture, clipOpt: ?*const KW_Rect, dstOpt: ?*const KW_Rect) void {
@@ -127,16 +130,19 @@ pub const KW_GPU_RenderDriver = struct {
 
     extern fn renderText(driver: ?*KW_RenderDriver, font: ?*KW_Font, text: ?*const u8, color: KW_Color, style: KW_RenderDriver_TextStyle) ?*KW_Texture {
         const self = @fieldParentPtr(Self, "driver", driver.?);
+        // TODO
         return null;
     }
 
     extern fn loadFont(driver: ?*KW_RenderDriver, fontFile: ?*const u8, ptSize: c_uint) ?*KW_Font {
         const self = @fieldParentPtr(Self, "driver", driver.?);
+        // TODO
         return null;
     }
 
     extern fn loadFontFromMemory(driver: ?*KW_RenderDriver, fontMemory: ?*const c_void, memSize: c_ulong, ptSize: c_uint) ?*KW_Font {
         const self = @fieldParentPtr(Self, "driver", driver.?);
+        // TODO
         return null;
     }
 
@@ -165,6 +171,7 @@ pub const KW_GPU_RenderDriver = struct {
 
     extern fn releaseTexture(driver: ?*KW_RenderDriver, texture: ?*KW_Texture) void {
         const self = @fieldParentPtr(Self, "driver", driver.?);
+        // TODO
     }
 
     extern fn releaseSurface(driver: ?*KW_RenderDriver, surface: ?*KW_Surface) void {
@@ -177,31 +184,38 @@ pub const KW_GPU_RenderDriver = struct {
 
     extern fn releaseFont(driver: ?*KW_RenderDriver, font: ?*KW_Font) void {
         const self = @fieldParentPtr(Self, "driver", driver.?);
+        // TODO
     }
 
     extern fn getClipRect(driver: ?*KW_RenderDriver, clip: ?*KW_Rect) KW_bool {
         const self = @fieldParentPtr(Self, "driver", driver.?);
+        // TODO
         return KW_bool.KW_TRUE;
     }
 
     extern fn getViewportSize(driver: ?*KW_RenderDriver, rect: ?*KW_Rect) void {
         const self = @fieldParentPtr(Self, "driver", driver.?);
+        // TODO
     }
 
     extern fn setClipRect(driver: ?*KW_RenderDriver, clip: ?*const KW_Rect, force: c_int) void {
         const self = @fieldParentPtr(Self, "driver", driver.?);
+        // TODO
     }
 
     extern fn releaseRenderDriver(driver: ?*KW_RenderDriver) void {
         const self = @fieldParentPtr(Self, "driver", driver.?);
+        // TODO
     }
 
     extern fn utf8TextSize(driver: ?*KW_RenderDriver, font: ?*KW_Font, text: ?*const u8, width: ?*c_uint, height: ?*c_uint) void {
         const self = @fieldParentPtr(Self, "driver", driver.?);
+        // TODO
     }
 
     extern fn getPixel(driver: ?*KW_RenderDriver, surface: ?*KW_Surface, x: c_uint, y: c_uint) c_uint {
         const self = @fieldParentPtr(Self, "driver", driver.?);
+        // TODO
         return 0;
     }
 
