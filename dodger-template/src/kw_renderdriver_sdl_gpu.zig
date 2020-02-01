@@ -211,12 +211,17 @@ pub const KW_GPU_RenderDriver = struct {
     extern fn getClipRect(driver: ?*KW_RenderDriver, clip: ?*KW_Rect) KW_bool {
         const self = @fieldParentPtr(Self, "driver", driver.?);
         // TODO
-        return KW_bool.KW_TRUE;
+        return KW_bool.KW_FALSE;
     }
 
-    extern fn getViewportSize(driver: ?*KW_RenderDriver, rect: ?*KW_Rect) void {
+    extern fn getViewportSize(driver: ?*KW_RenderDriver, rectOpt: ?*KW_Rect) void {
         const self = @fieldParentPtr(Self, "driver", driver.?);
-        // TODO
+        var rect = rectOpt orelse return;
+        var w: u16 = undefined;
+        var h: u16 = undefined;
+        GPU_GetVirtualResolution(self.gpuTarget, &w, &h);
+        rect.w = w;
+        rect.h = h;
     }
 
     extern fn setClipRect(driver: ?*KW_RenderDriver, clip: ?*const KW_Rect, force: c_int) void {
