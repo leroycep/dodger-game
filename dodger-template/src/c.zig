@@ -11,4 +11,6 @@ pub usingnamespace @cImport({
     @cInclude("KW_renderdriver.h");
 
     @cInclude("z_libpd.h");
+
+    @cInclude("sqlite3.h");
 });
