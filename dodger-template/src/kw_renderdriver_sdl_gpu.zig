@@ -142,12 +142,16 @@ pub const KW_GPU_RenderDriver = struct {
 
     extern fn createTexture(driver: ?*KW_RenderDriver, surface: ?*KW_Surface) ?*KW_Texture {
         const self = @fieldParentPtr(Self, "driver", driver.?);
+        if (surface) |surf| {
+            const sdl_surface = @ptrCast(*SDL_Surface, @alignCast(@alignOf(*SDL_Surface), surf.surface));
+            return self.wrapImage(GPU_CopyImageFromSurface(sdl_surface));
+        }
         return null;
     }
 
     extern fn loadTexture(driver: ?*KW_RenderDriver, file: ?*const u8) ?*KW_Texture {
         const self = @fieldParentPtr(Self, "driver", driver.?);
-        return null;
+        return self.wrapImage(GPU_LoadImage(file));
     }
 
     extern fn loadSurface(driver: ?*KW_RenderDriver, file: ?*const u8) ?*KW_Surface {
@@ -199,6 +203,12 @@ pub const KW_GPU_RenderDriver = struct {
     extern fn getPixel(driver: ?*KW_RenderDriver, surface: ?*KW_Surface, x: c_uint, y: c_uint) c_uint {
         const self = @fieldParentPtr(Self, "driver", driver.?);
         return 0;
+    }
+
+    fn wrapImage(self: *KW_GPU_RenderDriver, image: *GPU_Image) ?*KW_Texture {
+        const kw_texture = self.allocator.create(KW_Texture) catch return null;
+        kw_texture.texture = image;
+        return kw_texture;
     }
 };
 
