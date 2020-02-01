@@ -99,8 +99,32 @@ pub const KW_GPU_RenderDriver = struct {
 
     extern fn createSurface(driver: ?*KW_RenderDriver, width: c_uint, height: c_uint) ?*KW_Surface {
         const self = @fieldParentPtr(Self, "driver", driver.?);
-        // TODO
-        return null;
+        const RGBAMask = struct {
+            r: u32,
+            g: u32,
+            b: u32,
+            a: u32,
+        };
+        const mask = maskblock: {
+            if (SDL_BYTEORDER == SDL_BIG_ENDIAN) {
+                break :maskblock RGBAMask{
+                    .r = 0xff000000,
+                    .g = 0x00ff0000,
+                    .b = 0x0000ff00,
+                    .a = 0x000000ff,
+                };
+            } else {
+                break :maskblock RGBAMask{
+                    .r = 0x000000ff,
+                    .g = 0x0000ff00,
+                    .b = 0x00ff0000,
+                    .a = 0xff000000,
+                };
+            }
+        };
+        const s = SDL_CreateRGBSurface(0, @intCast(c_int, width), @intCast(c_int, height), 32, mask.r, mask.g, mask.b, mask.a);
+        _ = SDL_SetSurfaceBlendMode(s, SDL_BlendMode.SDL_BLENDMODE_NONE);
+        return self.wrapSurface(s);
     }
 
     extern fn getSurfaceExtents(driver: ?*KW_RenderDriver, surfaceOpt: ?*const KW_Surface, widthOpt: ?*c_uint, heightOpt: ?*c_uint) void {
@@ -243,6 +267,12 @@ pub const KW_GPU_RenderDriver = struct {
         const self = @fieldParentPtr(Self, "driver", driver.?);
         // TODO
         return 0;
+    }
+
+    fn wrapSurface(self: *KW_GPU_RenderDriver, surface: *SDL_Surface) ?*KW_Surface {
+        const kw_surface = self.allocator.create(KW_Surface) catch return null;
+        kw_surface.surface = surface;
+        return kw_surface;
     }
 
     fn wrapImage(self: *KW_GPU_RenderDriver, image: *GPU_Image) ?*KW_Texture {
