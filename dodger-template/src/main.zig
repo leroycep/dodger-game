@@ -23,6 +23,7 @@ pub fn main() !void {
 
     const winId = c.SDL_GetWindowID(win);
 
+    c.GPU_SetPreInitFlags(c.GPU_INIT_DISABLE_VSYNC);
     c.GPU_SetInitWindow(winId);
     const gpuTarget = c.GPU_Init(SCREEN_WIDTH, SCREEN_HEIGHT, c.GPU_DEFAULT_INIT_FLAGS);
     defer c.GPU_Quit();
