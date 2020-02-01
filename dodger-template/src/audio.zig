@@ -49,10 +49,10 @@ extern fn init_pd() void {
 const inbuf: [64]f32 = undefined;
 
 pub extern fn audio_callback(userdata: ?*c_void, stream: ?[*]u8, length: c_int) void {
-    var float_len = @divTrunc(length, 4); // 4 = size of float in bytes
+    var float_len = @divTrunc(length, @sizeOf(f32)); // 4 = size of float in bytes
     var len = @divTrunc(float_len, 64 * 2);
     std.debug.warn("{}, {}\n", length, len);
-    var outbuf: [*]f32 = @ptrCast([*]f32, @alignCast(4, stream));
+    var outbuf: [*]f32 = @ptrCast([*]f32, @alignCast(@alignOf(f32), stream));
     var rc = c.libpd_process_float(len, &inbuf, outbuf);
     if (rc != 0) {
         // This is an error, but it probably shouldn't be printed in this thread
