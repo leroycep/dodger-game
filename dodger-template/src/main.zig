@@ -34,14 +34,8 @@ pub fn main() !void {
     }
     defer c.TTF_Quit();
 
-    // if ((c.IMG_Init(c.IMG_INIT_PNG) & c.IMG_INIT_PNG) != c.IMG_INIT_PNG) {
-    //     return sdl.logErr(error.ImgInit);
-    // }
-
     var kw_driver = &kw_renderdriver.KW_GPU_RenderDriver.init(allocator, gpuTarget).driver;
     defer c.KW_ReleaseRenderDriver(kw_driver);
-    // const kw_driver = c.KW_CreateSDL2RenderDriver(ren, win);
-    // defer c.KW_ReleaseRenderDriver(kw_driver);
 
     const set = c.KW_LoadSurface(kw_driver, c"../lib/kiwi/examples/tileset/tileset.png");
     defer c.KW_ReleaseSurface(kw_driver, set);

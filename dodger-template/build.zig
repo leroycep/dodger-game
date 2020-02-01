@@ -22,7 +22,6 @@ pub fn build(b: *Builder) void {
     const exe = b.addExecutable("template", "src/main.zig");
     exe.setBuildMode(mode);
     exe.linkSystemLibrary("SDL2");
-    exe.linkSystemLibrary("SDL2_image");
     exe.linkSystemLibrary("SDL2_ttf");
     exe.linkSystemLibrary("SDL2_gpu");
     exe.linkSystemLibrary("c");
@@ -94,7 +93,6 @@ const KIWI_SOURCES = [_][]const u8{
     "KW_widget.c",
     "KW_widget_eventhandlers.c",
     "KW_renderdriver.c",
-    "KW_renderdriver_sdl2.c",
     "KW_rect.c",
     "KW_toggle.c",
     "KW_checkbox.c",
