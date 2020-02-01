@@ -264,9 +264,19 @@ pub const KW_GPU_RenderDriver = struct {
         // doesn't do anything, needs to be freed from the driver
     }
 
-    extern fn utf8TextSize(driver: ?*KW_RenderDriver, font: ?*KW_Font, text: ?*const u8, width: ?*c_uint, height: ?*c_uint) void {
+    extern fn utf8TextSize(driver: ?*KW_RenderDriver, fontOpt: ?*KW_Font, textOpt: ?*const u8, widthOpt: ?*c_uint, heightOpt: ?*c_uint) void {
         const self = @fieldParentPtr(Self, "driver", driver.?);
-        // TODO
+        const kw_font = fontOpt orelse return;
+        const font = castFont(kw_font.font.?);
+        const text = textOpt orelse return;
+        const width = widthOpt orelse return;
+        const height = widthOpt orelse return;
+
+        var w: c_int = undefined;
+        var h: c_int = undefined;
+        _ = TTF_SizeUTF8(font, text, &w, &h);
+        width.* = @intCast(c_uint, w);
+        height.* = @intCast(c_uint, h);
     }
 
     extern fn getPixel(driver: ?*KW_RenderDriver, surface: ?*KW_Surface, x: c_uint, y: c_uint) c_uint {
