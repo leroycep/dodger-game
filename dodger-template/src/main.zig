@@ -27,6 +27,11 @@ pub fn main() !void {
     const gpuTarget = c.GPU_Init(SCREEN_WIDTH, SCREEN_HEIGHT, c.GPU_DEFAULT_INIT_FLAGS);
     defer c.GPU_Quit();
 
+    if (c.TTF_Init() < 0) {
+        return error.CouldntInitTTF;
+    }
+    defer c.TTF_Quit();
+
     // if ((c.IMG_Init(c.IMG_INIT_PNG) & c.IMG_INIT_PNG) != c.IMG_INIT_PNG) {
     //     return sdl.logErr(error.ImgInit);
     // }

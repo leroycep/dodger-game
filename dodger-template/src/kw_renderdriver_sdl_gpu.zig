@@ -136,8 +136,7 @@ pub const KW_GPU_RenderDriver = struct {
 
     extern fn loadFont(driver: ?*KW_RenderDriver, fontFile: ?*const u8, ptSize: c_uint) ?*KW_Font {
         const self = @fieldParentPtr(Self, "driver", driver.?);
-        // TODO
-        return null;
+        return self.wrapFont(TTF_OpenFont(fontFile, @intCast(c_int, ptSize)));
     }
 
     extern fn loadFontFromMemory(driver: ?*KW_RenderDriver, fontMemory: ?*const c_void, memSize: c_ulong, ptSize: c_uint) ?*KW_Font {
@@ -223,6 +222,13 @@ pub const KW_GPU_RenderDriver = struct {
         const kw_texture = self.allocator.create(KW_Texture) catch return null;
         kw_texture.texture = image;
         return kw_texture;
+    }
+
+    fn wrapFont(self: *Self, fontOpt: ?*TTF_Font) ?*KW_Font {
+        const font = fontOpt orelse return null;
+        const kw_font = self.allocator.create(KW_Font) catch return null;
+        kw_font.font = font;
+        return kw_font;
     }
 };
 
