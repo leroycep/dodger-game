@@ -232,7 +232,10 @@ pub const KW_GPU_RenderDriver = struct {
 
     extern fn releaseFont(driver: ?*KW_RenderDriver, font: ?*KW_Font) void {
         const self = @fieldParentPtr(Self, "driver", driver.?);
-        // TODO
+        if (font) |kw_font| {
+            TTF_CloseFont(castFont(kw_font.font));
+            self.allocator.destroy(kw_font);
+        }
     }
 
     extern fn getClipRect(driver: ?*KW_RenderDriver, clip: ?*KW_Rect) KW_bool {
