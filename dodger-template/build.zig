@@ -11,6 +11,13 @@ pub fn build(b: *Builder) void {
     const file2c_output_dir = fs.path.join(b.allocator, &[_][]const u8{ b.build_root, b.cache_root, FILE2C_OUTPUT_SUBDIR }) catch unreachable;
     const resources = buildResources(b, file2c, file2c_output_dir);
 
+    const libpd_project_path = fs.path.join(b.allocator, &[_][]const u8{ b.build_root, LIBPD_PROJECT_PATH }) catch unreachable;
+    const make_libpd = b.addSystemCommand(&[_][] const u8{"make"});
+    make_libpd.cwd = libpd_project_path;
+
+    const make_libpd_step = b.step("build_libpd", "Build libpd dependency");
+    make_libpd_step.dependOn(&make_libpd.step);
+
     const mode = b.standardReleaseOptions();
     const exe = b.addExecutable("template", "src/main.zig");
     exe.setBuildMode(mode);
@@ -21,6 +28,12 @@ pub fn build(b: *Builder) void {
     exe.linkSystemLibrary("c");
     exe.addIncludeDir(KIWI_SOURCE_PATH);
     exe.addIncludeDir(file2c_output_dir);
+
+    exe.addIncludeDir(PD_INCLUDE_PATH);
+    exe.addIncludeDir(LIBPD_INCLUDE_PATH);
+    exe.addObjectFile(LIBPD_LIB_PATH ++ fs.path.sep_str ++ "libpd.so");
+
+    exe.step.dependOn(make_libpd_step);
     exe.step.dependOn(resources);
 
     const lib_cflags = [_][]const u8{};
@@ -86,3 +99,8 @@ const KIWI_SOURCES = [_][]const u8{
     "KW_toggle.c",
     "KW_checkbox.c",
 };
+
+const LIBPD_PROJECT_PATH = "../lib/libpd";
+const PD_INCLUDE_PATH = LIBPD_PROJECT_PATH ++ fs.path.sep_str ++ "pure-data" ++ fs.path.sep_str ++ "src";
+const LIBPD_INCLUDE_PATH = LIBPD_PROJECT_PATH ++ fs.path.sep_str ++ "libpd_wrapper";
+const LIBPD_LIB_PATH = LIBPD_PROJECT_PATH ++ fs.path.sep_str ++ "libs";

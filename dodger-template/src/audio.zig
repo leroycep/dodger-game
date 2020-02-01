@@ -5,10 +5,12 @@ const sdl = @import("sdl.zig");
 const assets = @import("assets.zig");
 usingnamespace @import("constants.zig");
 
+const SAMPLE_RATE = 48000;
+
 pub fn init() void {
     var want: c.SDL_AudioSpec = undefined;
     _ = c.SDL_memset(&want, 0, @sizeOf(c.SDL_AudioSpec));
-    want.freq = 48000;
+    want.freq = SAMPLE_RATE;
     want.format = c.AUDIO_F32;
     want.channels = 2;
     want.samples = 4096;
@@ -23,16 +25,37 @@ pub fn init() void {
         return;
     }
 
+    init_pd();
+
     c.SDL_PauseAudioDevice(dev, 0);
 }
 
+extern fn pdprint(s: ?[*]const u8) void {
+    _ = std.c.printf(c"%s", s);
+}
+
+extern fn init_pd() void {
+    c.libpd_set_printhook(pdprint);
+    _ = c.libpd_init();
+    _ = c.libpd_init_audio(0, 2, SAMPLE_RATE);
+
+    _ = c.libpd_start_message(1);
+    c.libpd_add_float(1.0);
+    _ = c.libpd_finish_message(c"pd", c"dsp");
+
+    _ = c.libpd_openfile(c"sine.pd", c"assets");
+}
+
+const inbuf: [64]f32 = undefined;
+
 pub extern fn audio_callback(userdata: ?*c_void, stream: ?[*]u8, length: c_int) void {
-    var len: usize = @intCast(usize, @divTrunc(length, 2));
-    var i: usize = 0;
-    var buf: [*]c.Sint16 = @ptrCast([*]c.Sint16, @alignCast(2, stream));
-    while (i < len) {
-        buf[i] = 0;
-        i += 1;
+    var float_len = @divTrunc(length, 4); // 4 = size of float in bytes
+    var len = @divTrunc(float_len, 64 * 2);
+    std.debug.warn("{}, {}\n", length, len);
+    var outbuf: [*]f32 = @ptrCast([*]f32, @alignCast(4, stream));
+    var rc = c.libpd_process_float(len, &inbuf, outbuf);
+    if (rc != 0) {
+        // This is an error, but it probably shouldn't be printed in this thread
     }
     return;
 }
