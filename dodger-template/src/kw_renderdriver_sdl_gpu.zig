@@ -128,10 +128,21 @@ pub const KW_GPU_RenderDriver = struct {
         GPU_BlitRect(texture, srcRect, self.gpuTarget, dstRect);
     }
 
-    extern fn renderText(driver: ?*KW_RenderDriver, font: ?*KW_Font, text: ?*const u8, color: KW_Color, style: KW_RenderDriver_TextStyle) ?*KW_Texture {
+    extern fn renderText(driver: ?*KW_RenderDriver, fontOpt: ?*KW_Font, textOpt: ?*const u8, color: KW_Color, style: KW_RenderDriver_TextStyle) ?*KW_Texture {
         const self = @fieldParentPtr(Self, "driver", driver.?);
-        // TODO
-        return null;
+
+        const kw_font = fontOpt orelse return null;
+        const font = castFont(kw_font.font.?);
+        const text = textOpt orelse return null;
+        const sdlcolor = SDL_Color{ .r = color.r, .g = color.g, .b = color.b, .a = color.a };
+
+        const previousstyle = TTF_GetFontStyle(font);
+        TTF_SetFontStyle(font, @enumToInt(style));
+        const textsurface = TTF_RenderUTF8_Blended(font, text, sdlcolor);
+        const ret = GPU_CopyImageFromSurface(textsurface);
+        SDL_FreeSurface(textsurface);
+        TTF_SetFontStyle(font, previousstyle);
+        return self.wrapImage(ret);
     }
 
     extern fn loadFont(driver: ?*KW_RenderDriver, fontFile: ?*const u8, ptSize: c_uint) ?*KW_Font {
@@ -238,6 +249,10 @@ fn castSurface(ptr: *c_void) *SDL_Surface {
 
 fn castImage(ptr: *c_void) *GPU_Image {
     return @ptrCast(*GPU_Image, @alignCast(@alignOf(*GPU_Image), ptr));
+}
+
+fn castFont(ptr: *c_void) *TTF_Font {
+    return @ptrCast(*TTF_Font, @alignCast(@alignOf(*TTF_Font), ptr));
 }
 
 fn kwRectToGPU(kw_rect: *const KW_Rect) GPU_Rect {
