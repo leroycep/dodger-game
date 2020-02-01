@@ -255,7 +255,7 @@ pub const KW_GPU_RenderDriver = struct {
 
     extern fn releaseRenderDriver(driver: ?*KW_RenderDriver) void {
         const self = @fieldParentPtr(Self, "driver", driver.?);
-        // TODO
+        // doesn't do anything, needs to be freed from the driver
     }
 
     extern fn utf8TextSize(driver: ?*KW_RenderDriver, font: ?*KW_Font, text: ?*const u8, width: ?*c_uint, height: ?*c_uint) void {
