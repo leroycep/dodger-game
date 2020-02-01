@@ -8,10 +8,30 @@ const assets = @import("assets.zig");
 const kw_renderdriver = @import("kw_renderdriver_sdl_gpu.zig");
 usingnamespace @import("constants.zig");
 
+const FREQ: u32 = 200;
+
+var audio_pos: u32 = 0;
+var audio_len: u32 = 0;
+var audio_freq: f32 = 1.0;
+var audio_vol: f32 = 6000;
+
+extern fn audio_callback(userdata: ?*c_void, stream: ?[*]u8, length: c_int) void {
+    var len: usize = @intCast(usize, @divTrunc(length, 2));
+    var i: usize = 0;
+    var buf: [*]c.Sint16 = @ptrCast([*]c.Sint16, @alignCast(2, stream));
+    while (i < len) {
+        buf[i] = @floatToInt(c.Sint16, audio_vol * std.math.sin(2 * std.math.pi * @intToFloat(f32, audio_pos) * audio_freq));
+        audio_pos += 1;
+        i += 1;
+    }
+    audio_len -= @intCast(u32, len);
+    return;
+}
+
 pub fn main() !void {
     const allocator = std.heap.direct_allocator;
 
-    if (c.SDL_Init(c.SDL_INIT_VIDEO) != 0) {
+    if (c.SDL_Init(c.SDL_INIT_VIDEO | c.SDL_INIT_AUDIO) != 0) {
         return sdl.logErr(error.InitFailed);
     }
     defer c.SDL_Quit();
@@ -47,6 +67,29 @@ pub fn main() !void {
 
     const assetsStruct = &assets.Assets.init(allocator);
     try assets.initAssets(assetsStruct);
+
+    var want: c.SDL_AudioSpec = undefined;
+    _ = c.SDL_memset(&want, 0, @sizeOf(c.SDL_AudioSpec));
+    want.freq = 48000;
+    want.format = c.AUDIO_F32;
+    want.channels = 2;
+    want.samples = 4096;
+    want.callback = audio_callback;
+
+    var have: c.SDL_AudioSpec = undefined;
+    _ = c.SDL_memset(&have, 0, @sizeOf(c.SDL_AudioSpec));
+    var dev = c.SDL_OpenAudioDevice(null, 0, &want, &have, c.SDL_AUDIO_ALLOW_FORMAT_CHANGE);
+    if (dev == 0) {
+        std.debug.warn("Could not acquire audio device.\n");
+        _ = std.c.printf(c"%s", c.SDL_GetError());
+    } else {
+        audio_len = @intCast(u32, have.freq) * 5;
+        audio_pos = 0;
+        audio_freq = @intToFloat(f32, FREQ) / @intToFloat(f32, have.freq);
+        audio_vol = 6000;
+
+        c.SDL_PauseAudioDevice(dev, 0);
+    }
 
     var ctx = Context{
         .win = win,
