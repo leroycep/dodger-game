@@ -254,9 +254,10 @@ pub const KW_GPU_RenderDriver = struct {
         rect.h = h;
     }
 
-    extern fn setClipRect(driver: ?*KW_RenderDriver, clip: ?*const KW_Rect, force: c_int) void {
+    extern fn setClipRect(driver: ?*KW_RenderDriver, clipOpt: ?*const KW_Rect, force: c_int) void {
         const self = @fieldParentPtr(Self, "driver", driver.?);
-        // TODO
+        const clip = clipOpt orelse return;
+        _ = GPU_SetClip(self.gpuTarget, @intCast(i16, clip.x), @intCast(i16, clip.y), @intCast(u16, clip.w), @intCast(u16, clip.h));
     }
 
     extern fn releaseRenderDriver(driver: ?*KW_RenderDriver) void {
