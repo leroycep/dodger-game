@@ -110,8 +110,19 @@ pub const KW_GPU_RenderDriver = struct {
         const self = @fieldParentPtr(Self, "driver", driver.?);
     }
 
-    extern fn renderCopy(driver: ?*KW_RenderDriver, src: ?*KW_Texture, clip: ?*const KW_Rect, dst: ?*const KW_Rect) void {
+    extern fn renderCopy(driver: ?*KW_RenderDriver, textureOpt: ?*KW_Texture, clipOpt: ?*const KW_Rect, dstOpt: ?*const KW_Rect) void {
         const self = @fieldParentPtr(Self, "driver", driver.?);
+        const kw_texture = textureOpt orelse return;
+        const texture = castImage(kw_texture.texture orelse return);
+        var srcRect: ?*GPU_Rect = null;
+        var dstRect: ?*GPU_Rect = null;
+        if (clipOpt) |clip| {
+            srcRect = &kwRectToGPU(clip);
+        }
+        if (dstOpt) |dst| {
+            dstRect = &kwRectToGPU(dst);
+        }
+        GPU_BlitRect(texture, srcRect, self.gpuTarget, dstRect);
     }
 
     extern fn renderText(driver: ?*KW_RenderDriver, font: ?*KW_Font, text: ?*const u8, color: KW_Color, style: KW_RenderDriver_TextStyle) ?*KW_Texture {
@@ -193,4 +204,17 @@ pub const KW_GPU_RenderDriver = struct {
 
 fn castSurface(ptr: *c_void) *SDL_Surface {
     return @ptrCast(*SDL_Surface, @alignCast(@alignOf(*SDL_Surface), ptr));
+}
+
+fn castImage(ptr: *c_void) *GPU_Image {
+    return @ptrCast(*GPU_Image, @alignCast(@alignOf(*GPU_Image), ptr));
+}
+
+fn kwRectToGPU(kw_rect: *const KW_Rect) GPU_Rect {
+    return GPU_Rect{
+        .x = @intToFloat(f32, kw_rect.x),
+        .y = @intToFloat(f32, kw_rect.y),
+        .w = @intToFloat(f32, kw_rect.w),
+        .h = @intToFloat(f32, kw_rect.h),
+    };
 }
