@@ -7,6 +7,7 @@ const Context = @import("context.zig").Context;
 const assets = @import("assets.zig");
 const kw_renderdriver = @import("kw_renderdriver_sdl_gpu.zig");
 const audio = @import("audio.zig");
+const LeaderBoard = @import("leaderboard.zig").LeaderBoard;
 usingnamespace @import("constants.zig");
 
 pub fn main() !void {
@@ -50,8 +51,10 @@ pub fn main() !void {
         .kw_driver = kw_driver,
         .kw_tileset = set,
         .assets = assetsStruct,
+        .leaderboard = &(try LeaderBoard.init()),
         .fps = 0,
     };
+    defer ctx.leaderboard.deinit();
 
     var quit = false;
     var screenStarted = false;
