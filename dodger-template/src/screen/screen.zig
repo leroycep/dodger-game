@@ -3,11 +3,13 @@ const Context = @import("../context.zig").Context;
 
 pub const TransitionTag = enum {
     PushScreen,
+    ReplaceScreen,
     PopScreen,
 };
 
 pub const Transition = union(TransitionTag) {
     PushScreen: *Screen,
+    ReplaceScreen: *Screen,
     PopScreen: void,
 };
 

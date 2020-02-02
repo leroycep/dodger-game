@@ -11,6 +11,7 @@ const EnemyBreed = @import("../game/enemy.zig").EnemyBreed;
 const physics = @import("../game/physics.zig");
 const Vec2 = physics.Vec2;
 const World = @import("../game/world.zig").World;
+const EnterNameScreen = @import("enter_name.zig").EnterNameScreen;
 
 const InputMap = struct {
     left: usize,
@@ -165,7 +166,8 @@ pub const PlayScreen = struct {
 
         if (!self.playerAlive) {
             if (std.time.milliTimestamp() - self.death_start > 1000) {
-                return Transition{ .PopScreen = {} };
+                const newScreen = EnterNameScreen.init(self.allocator, self.score) catch unreachable;
+                return Transition{ .ReplaceScreen = &newScreen.screen };
             }
         }
 

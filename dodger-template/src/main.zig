@@ -70,7 +70,7 @@ pub fn main() !void {
     const keys = c.SDL_GetKeyboardState(null);
 
     var screens = std.ArrayList(*screen.Screen).init(allocator);
-    try screens.append(&(try screen.enter_name.EnterNameScreen.init(allocator, 1337)).screen);
+    try screens.append(&(try screen.menu.MenuScreen.init(allocator)).screen);
 
     var frame_timer = try std.time.Timer.start();
 
@@ -108,21 +108,25 @@ pub fn main() !void {
         c.GPU_Flip(gpuTarget);
 
         if (transition) |t| {
+            currentScreen.stop(&ctx);
             switch (t) {
-                .PushScreen => |newScreen| {
-                    currentScreen.stop(&ctx);
+                .PushScreen => |newScreen| try screens.append(newScreen),
+                .ReplaceScreen => |newScreen| {
+                    screens.pop().deinit();
                     try screens.append(newScreen);
-                    screenStarted = false;
                 },
                 .PopScreen => {
-                    currentScreen.stop(&ctx);
                     screens.pop().deinit();
                     if (screens.len == 0) {
                         quit = true;
                     }
-                    screenStarted = false;
                 },
             }
+            std.debug.warn("Screens:\n");
+            for (screens.toSlice()) |s| {
+                std.debug.warn("  {}\n", s);
+            }
+            screenStarted = false;
         }
     }
 }
