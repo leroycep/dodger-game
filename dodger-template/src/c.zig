@@ -8,6 +8,7 @@ pub usingnamespace @cImport({
     @cInclude("KW_frame.h");
     @cInclude("KW_label.h");
     @cInclude("KW_button.h");
+    @cInclude("KW_editbox.h");
     @cInclude("KW_renderdriver.h");
 
     @cInclude("z_libpd.h");

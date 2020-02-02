@@ -59,7 +59,7 @@ pub const EnterNameScreen = struct {
         var buttonsrect = c.KW_Rect{ .x = 80, .y = 0, .w = 320, .h = 20 };
 
         var rects = [_]?*c.KW_Rect{ &titlerect, &label0rect, &label1rect, &label2rect, &nameboxrect, &buttonsrect };
-        var weights = [_]c_uint{ 4, 2, 2, 2, 2, 6 };
+        var weights = [_]c_uint{ 4, 2, 2, 2, 4, 6 };
         comptime std.debug.assert(rects.len == weights.len);
 
         c.KW_RectFillParentVertically(&geometry, &rects, &weights, weights.len, 10);
@@ -77,7 +77,7 @@ pub const EnterNameScreen = struct {
         // END Layout buttons
 
         // Write score to textBuf
-        const scoreText = std.fmt.bufPrint(self.textBuf, "{d:0.2}\x00", ctx.fps) catch unreachable;
+        const scoreText = std.fmt.bufPrint(self.textBuf, "{d:0.2} seconds\x00", self.score) catch unreachable;
         // END Write score to textBuf
 
         // Create widgets
@@ -85,6 +85,7 @@ pub const EnterNameScreen = struct {
         _ = c.KW_CreateLabel(self.gui, frame, c"You Lasted:", &label0rect);
         _ = c.KW_CreateLabel(self.gui, frame, scoreText.ptr, &label1rect);
         _ = c.KW_CreateLabel(self.gui, frame, c"Your Name:", &label2rect);
+        _ = c.KW_CreateEditbox(self.gui, frame, c"", &nameboxrect);
         var btnframe = c.KW_CreateFrame(self.gui, frame, &buttonsrect);
         const cancelbutton = c.KW_CreateButtonAndLabel(self.gui, btnframe, c"Cancel", &cancelrect) orelse unreachable;
         const okaybutton = c.KW_CreateButtonAndLabel(self.gui, btnframe, c"Okay", &okayrect) orelse unreachable;
