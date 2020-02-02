@@ -57,7 +57,6 @@ pub fn main() !void {
     };
     defer ctx.leaderboard.deinit();
 
-    try ctx.leaderboard.add_score("David", 50);
     var scores = std.ArrayList(leaderboard.Score).init(allocator);
     try ctx.leaderboard.get_topten_scores(&scores);
     std.debug.warn("SCORES:\n");
@@ -69,6 +68,8 @@ pub fn main() !void {
     var screenStarted = false;
     var e: c.SDL_Event = undefined;
     const keys = c.SDL_GetKeyboardState(null);
+
+    _ = try screen.enter_name.EnterNameScreen.init(allocator, 1337);
 
     var screens = std.ArrayList(*screen.Screen).init(allocator);
     try screens.append(&(try screen.menu.MenuScreen.init(allocator)).screen);
