@@ -12,14 +12,14 @@ pub fn build(b: *Builder) void {
     const resources = buildResources(b, file2c, file2c_output_dir);
 
     const libpd_project_path = fs.path.join(b.allocator, &[_][]const u8{ b.build_root, LIBPD_PROJECT_PATH }) catch unreachable;
-    const make_libpd = b.addSystemCommand(&[_][] const u8{"make"});
+    const make_libpd = b.addSystemCommand(&[_][]const u8{"make"});
     make_libpd.cwd = libpd_project_path;
 
     const make_libpd_step = b.step("build_libpd", "Build libpd dependency");
     make_libpd_step.dependOn(&make_libpd.step);
 
     const mode = b.standardReleaseOptions();
-    const exe = b.addExecutable("template", "src/main.zig");
+    const exe = b.addExecutable("dodger", "src/main.zig");
     exe.setBuildMode(mode);
     exe.linkSystemLibrary("SDL2");
     exe.linkSystemLibrary("SDL2_ttf");
@@ -43,6 +43,13 @@ pub fn build(b: *Builder) void {
         exe.addCSourceFile(KIWI_SOURCE_PATH ++ "/" ++ src, lib_cflags);
     }
     exe.install();
+
+    // Copy assets folder next to binary
+    b.installDirectory(std.build.InstallDirectoryOptions{
+        .source_dir = "assets",
+        .install_dir = .Bin,
+        .install_subdir = "assets",
+    });
 
     const run_cmd = exe.run();
     run_cmd.step.dependOn(b.getInstallStep());

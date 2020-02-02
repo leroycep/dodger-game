@@ -19,7 +19,7 @@ pub fn main() !void {
     }
     defer c.SDL_Quit();
 
-    const win = c.SDL_CreateWindow(c"Hello World!", c.SDL_WINDOWPOS_UNDEFINED_MASK, c.SDL_WINDOWPOS_UNDEFINED_MASK, SCREEN_WIDTH, SCREEN_HEIGHT, c.SDL_WINDOW_SHOWN | c.SDL_WINDOW_OPENGL) orelse {
+    const win = c.SDL_CreateWindow(c"Dodger", c.SDL_WINDOWPOS_UNDEFINED_MASK, c.SDL_WINDOWPOS_UNDEFINED_MASK, SCREEN_WIDTH, SCREEN_HEIGHT, c.SDL_WINDOW_SHOWN | c.SDL_WINDOW_OPENGL) orelse {
         return sdl.logErr(error.CouldntCreateWindow);
     };
     defer c.SDL_DestroyWindow(win);
@@ -39,10 +39,17 @@ pub fn main() !void {
     var kw_driver = &kw_renderdriver.KW_GPU_RenderDriver.init(allocator, gpuTarget).driver;
     defer c.KW_ReleaseRenderDriver(kw_driver);
 
-    const set = c.KW_LoadSurface(kw_driver, c"../lib/kiwi/examples/tileset/tileset.png");
+    var out_buffer = [_]u8{0} ** std.fs.MAX_PATH_BYTES;
+    const exeDir = try std.fs.selfExeDirPath(&out_buffer);
+    const rootDir = try std.fs.path.join(allocator, [_][]const u8{ exeDir, "assets" });
+
+    // Hackishly adding null to end of path
+    const tilesetPath = try std.fs.path.join(allocator, [_][]const u8{ rootDir, "tileset.png\x00" });
+
+    const set = c.KW_LoadSurface(kw_driver, tilesetPath.ptr);
     defer c.KW_ReleaseSurface(kw_driver, set);
 
-    const assetsStruct = &assets.Assets.init(allocator);
+    const assetsStruct = &assets.Assets.init(allocator, rootDir);
     try assets.initAssets(assetsStruct);
 
     audio.init();
