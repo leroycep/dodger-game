@@ -69,10 +69,8 @@ pub fn main() !void {
     var e: c.SDL_Event = undefined;
     const keys = c.SDL_GetKeyboardState(null);
 
-    _ = try screen.enter_name.EnterNameScreen.init(allocator, 1337);
-
     var screens = std.ArrayList(*screen.Screen).init(allocator);
-    try screens.append(&(try screen.menu.MenuScreen.init(allocator)).screen);
+    try screens.append(&(try screen.enter_name.EnterNameScreen.init(allocator, 1337)).screen);
 
     var frame_timer = try std.time.Timer.start();
 

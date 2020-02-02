@@ -59,21 +59,21 @@ pub const EnterNameScreen = struct {
         var buttonsrect = c.KW_Rect{ .x = 80, .y = 0, .w = 320, .h = 20 };
 
         var rects = [_]?*c.KW_Rect{ &titlerect, &label0rect, &label1rect, &label2rect, &nameboxrect, &buttonsrect };
-        var weights = [_]c_uint{ 1, 1, 1, 1, 1, 1 };
+        var weights = [_]c_uint{ 4, 2, 2, 2, 2, 6 };
         comptime std.debug.assert(rects.len == weights.len);
 
         c.KW_RectFillParentVertically(&geometry, &rects, &weights, weights.len, 10);
         // END verical layout
 
         // Layout buttons
-        var cancelrect: c.KW_Rect = c.KW_Rect{ .x = 0, .y = 0, .w = 150, .h = 20 };
-        var okayrect: c.KW_Rect = c.KW_Rect{ .x = 0, .y = 0, .w = 150, .h = 20 };
+        var cancelrect: c.KW_Rect = c.KW_Rect{ .x = 0, .y = 0, .w = 0, .h = 30 };
+        var okayrect: c.KW_Rect = c.KW_Rect{ .x = 0, .y = 0, .w = 0, .h = 30 };
 
-        rects = [_]?*c.KW_Rect{ &cancelrect, &okayrect };
-        weights = [_]c_uint{ 1, 1 };
-        comptime std.debug.assert(rects.len == weights.len);
+        var btnrects = [_]?*c.KW_Rect{ &cancelrect, &okayrect };
+        var btnweights = [_]c_uint{ 1, 1 };
+        comptime std.debug.assert(btnrects.len == btnweights.len);
 
-        c.KW_RectFillParentHorizontally(&buttonsrect, &rects, &weights, weights.len, 10, c.KW_RECT_ALIGN_VERTICALLY_NONE);
+        c.KW_RectFillParentHorizontally(&buttonsrect, &btnrects, &btnweights, btnweights.len, 30, c.KW_RECT_ALIGN_MIDDLE);
         // END Layout buttons
 
         // Write score to textBuf
@@ -84,6 +84,7 @@ pub const EnterNameScreen = struct {
         _ = c.KW_CreateLabel(self.gui, frame, c"GAME OVER", &titlerect);
         _ = c.KW_CreateLabel(self.gui, frame, c"You Lasted:", &label0rect);
         _ = c.KW_CreateLabel(self.gui, frame, scoreText.ptr, &label1rect);
+        _ = c.KW_CreateLabel(self.gui, frame, c"Your Name:", &label2rect);
         var btnframe = c.KW_CreateFrame(self.gui, frame, &buttonsrect);
         const cancelbutton = c.KW_CreateButtonAndLabel(self.gui, btnframe, c"Cancel", &cancelrect) orelse unreachable;
         const okaybutton = c.KW_CreateButtonAndLabel(self.gui, btnframe, c"Okay", &okayrect) orelse unreachable;
@@ -118,7 +119,9 @@ pub const EnterNameScreen = struct {
         c.KW_ProcessEvents(self.gui);
 
         if (self.okayPressed.*) {}
-        if (self.cancelPressed.*) {}
+        if (self.cancelPressed.*) {
+            return Transition{ .PopScreen = {} };
+        }
 
         return null;
     }
