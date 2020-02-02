@@ -4,7 +4,7 @@ usingnamespace @import("constants.zig");
 
 const TB_CREATE_SQL =
     c\\ CREATE TABLE IF NOT EXISTS scores(
-    c\\   id     INT PRIMARY KEY AUTOINCREMENT,
+    c\\   id     INTEGER PRIMARY KEY AUTOINCREMENT,
     c\\   name   TEXT NOT NULL,
     c\\   score  REAL NOT NULL );
 ;
@@ -42,6 +42,7 @@ pub const LeaderBoard = struct {
         var tb_create_stmt: ?*sqlite3_stmt = undefined;
         var rc = sqlite3_prepare_v2(db, TB_CREATE_SQL, @intCast(c_int, tb_create_sql_len), &tb_create_stmt, null);
         if (rc != SQLITE_OK) {
+            std.debug.warn("sqlite3 error: {}\n", rc);
             return error.CantInitScoresDB;
         }
 
