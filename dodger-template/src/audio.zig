@@ -13,7 +13,7 @@ pub fn init() void {
     want.freq = SAMPLE_RATE;
     want.format = c.AUDIO_F32;
     want.channels = 2;
-    want.samples = 4096;
+    want.samples = 256;
     want.callback = audio_callback;
 
     var have: c.SDL_AudioSpec = undefined;
@@ -24,6 +24,8 @@ pub fn init() void {
         _ = std.c.printf(c"%s", c.SDL_GetError());
         return;
     }
+
+    std.debug.warn("Samples per callback: {}\n", have.samples);
 
     init_pd();
 
@@ -38,12 +40,20 @@ extern fn init_pd() void {
     c.libpd_set_printhook(pdprint);
     _ = c.libpd_init();
     _ = c.libpd_init_audio(0, 2, SAMPLE_RATE);
+    c.libpd_set_verbose(0);
 
     _ = c.libpd_start_message(1);
     c.libpd_add_float(1.0);
     _ = c.libpd_finish_message(c"pd", c"dsp");
 
-    _ = c.libpd_openfile(c"sine.pd", c"assets");
+    var patch = c.libpd_openfile(c"footstep.pd", c"assets");
+    var patch_id = c.libpd_getdollarzero(patch);
+    std.debug.warn("{}\n", patch_id);
+
+    _ = c.libpd_float(c"walkspeed", 0.0);
+    _ = c.libpd_start_message(1);
+    _ = c.libpd_finish_message(c"texture", c"snow");
+    _ = c.libpd_float(c"$0-roll", 0.0);
 }
 
 const inbuf: [64]f32 = undefined;
@@ -51,7 +61,6 @@ const inbuf: [64]f32 = undefined;
 pub extern fn audio_callback(userdata: ?*c_void, stream: ?[*]u8, length: c_int) void {
     var float_len = @divTrunc(length, @sizeOf(f32)); // 4 = size of float in bytes
     var len = @divTrunc(float_len, 64 * 2);
-    std.debug.warn("{}, {}\n", length, len);
     var outbuf: [*]f32 = @ptrCast([*]f32, @alignCast(@alignOf(f32), stream));
     var rc = c.libpd_process_float(len, &inbuf, outbuf);
     if (rc != 0) {
