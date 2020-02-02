@@ -57,13 +57,6 @@ pub fn main() !void {
     };
     defer ctx.leaderboard.deinit();
 
-    var scores = std.ArrayList(leaderboard.Score).init(allocator);
-    try ctx.leaderboard.get_topten_scores(&scores);
-    std.debug.warn("SCORES:\n");
-    for (scores.toSlice()) |s| {
-        std.debug.warn("  {} lasted {d}s\n", s.name, s.score);
-    }
-
     var quit = false;
     var screenStarted = false;
     var e: c.SDL_Event = undefined;
@@ -121,10 +114,6 @@ pub fn main() !void {
                         quit = true;
                     }
                 },
-            }
-            std.debug.warn("Screens:\n");
-            for (screens.toSlice()) |s| {
-                std.debug.warn("  {}\n", s);
             }
             screenStarted = false;
         }
