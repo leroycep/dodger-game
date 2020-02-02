@@ -25,38 +25,33 @@ pub const MenuScreen = struct {
         };
 
         self.playButtonPressed = try allocator.create(bool);
-        self.playButtonPressed.* = false;
 
         return self;
     }
 
     fn start(screen: *Screen, ctx: *Context) void {
         const self = @fieldParentPtr(Self, "screen", screen);
+
         self.playButtonPressed.* = false;
 
         self.gui = c.KW_Init(ctx.kw_driver, ctx.kw_tileset) orelse unreachable;
 
-        var windowrect = c.KW_Rect{ .x = 0, .y = 0, .w = 320, .h = 240 };
+        var windowrect = c.KW_Rect{ .x = 0, .y = 0, .w = 0, .h = 0 };
         c.SDL_GetWindowSize(ctx.win, &windowrect.w, &windowrect.h);
 
         var geometry = c.KW_Rect{ .x = 0, .y = 0, .w = 320, .h = 240 };
         c.KW_RectCenterInParent(&windowrect, &geometry);
         var frame = c.KW_CreateFrame(self.gui, null, &geometry);
 
-        var labelrect_ = c.KW_Rect{ .x = 0, .y = 0, .w = 320, .h = 100 };
-        const labelrect: ?*c.KW_Rect = &labelrect_;
-        var playbuttonrect_: c.KW_Rect = c.KW_Rect{ .x = 10, .y = 0, .w = 300, .h = 20 };
-        const playbuttonrect: ?*c.KW_Rect = &playbuttonrect_;
+        var labelrect = c.KW_Rect{ .x = 0, .y = 0, .w = 320, .h = 100 };
+        var playbuttonrect: c.KW_Rect = c.KW_Rect{ .x = 10, .y = 0, .w = 300, .h = 20 };
 
-        var rects_array = [_]?*c.KW_Rect{ labelrect, playbuttonrect };
-        const rects = rects_array[0..2].ptr;
+        var rects = [_]?*c.KW_Rect{ &labelrect, &playbuttonrect };
+        var weights = [_]c_uint{ 2, 1 };
 
-        var weights_array = [_]c_uint{ 2, 1 };
-        const weights = weights_array[0..2].ptr;
-
-        c.KW_RectFillParentVertically(&geometry, rects, weights, 2, 10);
-        const label = c.KW_CreateLabel(self.gui, frame, c"Dodger", labelrect);
-        const playbutton = c.KW_CreateButtonAndLabel(self.gui, frame, c"Play", playbuttonrect) orelse unreachable;
+        c.KW_RectFillParentVertically(&geometry, &rects, &weights, weights.len, 10);
+        const label = c.KW_CreateLabel(self.gui, frame, c"Dodger", &labelrect);
+        const playbutton = c.KW_CreateButtonAndLabel(self.gui, frame, c"Play", &playbuttonrect) orelse unreachable;
 
         const iconrect = c.KW_Rect{ .x = 0, .y = 48, .w = 24, .h = 24 };
         c.KW_SetLabelIcon(label, &iconrect);
