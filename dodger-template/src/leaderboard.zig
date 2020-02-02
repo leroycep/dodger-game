@@ -25,13 +25,20 @@ const TB_INSERT_SCORE =
 ;
 
 pub const LeaderBoard = struct {
+    allocator: *std.mem.Allocator,
     db: *sqlite3,
     tb_select_topten_scores_stmt: *sqlite3_stmt,
     tb_insert_score_stmt: *sqlite3_stmt,
 
-    pub fn init() !LeaderBoard {
+    pub fn init(allocator: *std.mem.Allocator) !LeaderBoard {
+        const app_data_dir = try std.fs.getAppDataDir(allocator, APP_NAME);
+        defer allocator.free(app_data_dir);
+        try std.fs.makePath(allocator, app_data_dir);
+        const c_filepath = try std.fmt.allocPrint(allocator, "{}/scores.db\x00", app_data_dir);
+        defer allocator.free(c_filepath);
+
         var raw_db: ?*sqlite3 = undefined;
-        if (sqlite3_open(c"scores.db", &raw_db) != 0) {
+        if (sqlite3_open(c_filepath.ptr, &raw_db) != 0) {
             return error.CantOpenScoresDB;
         }
 
@@ -74,6 +81,7 @@ pub const LeaderBoard = struct {
         errdefer _ = sqlite3_finalize(tb_insert_score_stmt);
 
         return LeaderBoard{
+            .allocator = allocator,
             .db = db,
             .tb_select_topten_scores_stmt = tb_select_topten_scores_stmt orelse return error.CantInitSelectTopTen,
             .tb_insert_score_stmt = tb_insert_score_stmt orelse return error.CantInitInsertScore,

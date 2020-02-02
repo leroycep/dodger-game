@@ -59,7 +59,7 @@ pub fn main() !void {
         .kw_driver = kw_driver,
         .kw_tileset = set,
         .assets = assetsStruct,
-        .leaderboard = &(try LeaderBoard.init()),
+        .leaderboard = &(try LeaderBoard.init(allocator)),
         .fps = 0,
     };
     defer ctx.leaderboard.deinit();
