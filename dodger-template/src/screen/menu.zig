@@ -12,6 +12,7 @@ pub const MenuScreen = struct {
     gui: *c.KW_GUI,
     playButtonPressed: *bool,
     highScoresButtonPressed: *bool,
+    exitButtonPressed: *bool,
 
     const Self = @This();
 
@@ -28,6 +29,7 @@ pub const MenuScreen = struct {
 
         self.playButtonPressed = try allocator.create(bool);
         self.highScoresButtonPressed = try allocator.create(bool);
+        self.exitButtonPressed = try allocator.create(bool);
 
         return self;
     }
@@ -47,18 +49,20 @@ pub const MenuScreen = struct {
         c.KW_RectCenterInParent(&windowrect, &geometry);
         var frame = c.KW_CreateFrame(self.gui, null, &geometry);
 
-        var labelrect = c.KW_Rect{ .x = 0, .y = 0, .w = 320, .h = 100 };
-        var playbuttonrect: c.KW_Rect = c.KW_Rect{ .x = 10, .y = 0, .w = 300, .h = 20 };
-        var highScoresRect: c.KW_Rect = c.KW_Rect{ .x = 10, .y = 0, .w = 300, .h = 20 };
+        var labelrect = c.KW_Rect{ .x = 0, .y = 0, .w = 320, .h = 0 };
+        var playbuttonrect: c.KW_Rect = c.KW_Rect{ .x = 10, .y = 0, .w = 300, .h = 0 };
+        var highScoresRect: c.KW_Rect = c.KW_Rect{ .x = 10, .y = 0, .w = 300, .h = 0 };
+        var exitRect: c.KW_Rect = c.KW_Rect{ .x = 10, .y = 0, .w = 300, .h = 0 };
 
-        var rects = [_]?*c.KW_Rect{ &labelrect, &playbuttonrect, &highScoresRect };
-        var weights = [_]c_uint{ 2, 1, 1 };
+        var rects = [_]?*c.KW_Rect{ &labelrect, &playbuttonrect, &highScoresRect, &exitRect };
+        var weights = [_]c_uint{ 2, 1, 1, 1 };
         comptime std.debug.assert(rects.len == weights.len);
 
         c.KW_RectFillParentVertically(&geometry, &rects, &weights, weights.len, 10);
         const label = c.KW_CreateLabel(self.gui, frame, c"Dodger", &labelrect);
         const playbutton = c.KW_CreateButtonAndLabel(self.gui, frame, c"Play", &playbuttonrect) orelse unreachable;
         const highScoresButton = c.KW_CreateButtonAndLabel(self.gui, frame, c"High Scores", &highScoresRect) orelse unreachable;
+        const exitButton = c.KW_CreateButtonAndLabel(self.gui, frame, c"Exit", &exitRect) orelse unreachable;
 
         const iconrect = c.KW_Rect{ .x = 0, .y = 48, .w = 24, .h = 24 };
         c.KW_SetLabelIcon(label, &iconrect);
@@ -68,6 +72,9 @@ pub const MenuScreen = struct {
 
         c.KW_SetWidgetUserData(highScoresButton, @ptrCast(*c_void, self.highScoresButtonPressed));
         c.KW_AddWidgetMouseDownHandler(highScoresButton, onPressed);
+
+        c.KW_SetWidgetUserData(exitButton, @ptrCast(*c_void, self.exitButtonPressed));
+        c.KW_AddWidgetMouseDownHandler(exitButton, onPressed);
     }
 
     fn onEvent(screen: *Screen, event: ScreenEvent) ?Transition {
@@ -97,6 +104,10 @@ pub const MenuScreen = struct {
         if (self.highScoresButtonPressed.*) {
             const high_scores_screen = HighScoresScreen.init(self.allocator, ctx) catch unreachable;
             return Transition{ .PushScreen = &high_scores_screen.screen };
+        }
+
+        if (self.exitButtonPressed.*) {
+            return Transition{ .PopScreen = {} };
         }
 
         return null;
