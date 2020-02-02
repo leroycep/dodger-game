@@ -4,12 +4,14 @@ const sdl = @import("../sdl.zig");
 usingnamespace @import("screen.zig");
 const Context = @import("../context.zig").Context;
 const PlayScreen = @import("play.zig").PlayScreen;
+const HighScoresScreen = @import("high_scores.zig").HighScoresScreen;
 
 pub const MenuScreen = struct {
     allocator: *std.mem.Allocator,
     screen: Screen,
     gui: *c.KW_GUI,
     playButtonPressed: *bool,
+    highScoresButtonPressed: *bool,
 
     const Self = @This();
 
@@ -25,6 +27,7 @@ pub const MenuScreen = struct {
         };
 
         self.playButtonPressed = try allocator.create(bool);
+        self.highScoresButtonPressed = try allocator.create(bool);
 
         return self;
     }
@@ -33,6 +36,7 @@ pub const MenuScreen = struct {
         const self = @fieldParentPtr(Self, "screen", screen);
 
         self.playButtonPressed.* = false;
+        self.highScoresButtonPressed.* = false;
 
         self.gui = c.KW_Init(ctx.kw_driver, ctx.kw_tileset) orelse unreachable;
 
@@ -45,19 +49,25 @@ pub const MenuScreen = struct {
 
         var labelrect = c.KW_Rect{ .x = 0, .y = 0, .w = 320, .h = 100 };
         var playbuttonrect: c.KW_Rect = c.KW_Rect{ .x = 10, .y = 0, .w = 300, .h = 20 };
+        var highScoresRect: c.KW_Rect = c.KW_Rect{ .x = 10, .y = 0, .w = 300, .h = 20 };
 
-        var rects = [_]?*c.KW_Rect{ &labelrect, &playbuttonrect };
-        var weights = [_]c_uint{ 2, 1 };
+        var rects = [_]?*c.KW_Rect{ &labelrect, &playbuttonrect, &highScoresRect };
+        var weights = [_]c_uint{ 2, 1, 1 };
+        comptime std.debug.assert(rects.len == weights.len);
 
         c.KW_RectFillParentVertically(&geometry, &rects, &weights, weights.len, 10);
         const label = c.KW_CreateLabel(self.gui, frame, c"Dodger", &labelrect);
         const playbutton = c.KW_CreateButtonAndLabel(self.gui, frame, c"Play", &playbuttonrect) orelse unreachable;
+        const highScoresButton = c.KW_CreateButtonAndLabel(self.gui, frame, c"High Scores", &highScoresRect) orelse unreachable;
 
         const iconrect = c.KW_Rect{ .x = 0, .y = 48, .w = 24, .h = 24 };
         c.KW_SetLabelIcon(label, &iconrect);
 
         c.KW_SetWidgetUserData(playbutton, @ptrCast(*c_void, self.playButtonPressed));
-        c.KW_AddWidgetMouseDownHandler(playbutton, onPlayPressed);
+        c.KW_AddWidgetMouseDownHandler(playbutton, onPressed);
+
+        c.KW_SetWidgetUserData(highScoresButton, @ptrCast(*c_void, self.highScoresButtonPressed));
+        c.KW_AddWidgetMouseDownHandler(highScoresButton, onPressed);
     }
 
     fn onEvent(screen: *Screen, event: ScreenEvent) ?Transition {
@@ -84,6 +94,11 @@ pub const MenuScreen = struct {
             return Transition{ .PushScreen = &play_screen.screen };
         }
 
+        if (self.highScoresButtonPressed.*) {
+            const high_scores_screen = HighScoresScreen.init(self.allocator, ctx) catch unreachable;
+            return Transition{ .PushScreen = &high_scores_screen.screen };
+        }
+
         return null;
     }
 
@@ -100,11 +115,12 @@ pub const MenuScreen = struct {
     fn deinit(screen: *Screen) void {
         const self = @fieldParentPtr(Self, "screen", screen);
         self.allocator.destroy(self.playButtonPressed);
+        self.allocator.destroy(self.highScoresButtonPressed);
         self.allocator.destroy(self);
     }
 
-    extern fn onPlayPressed(widget: ?*c.KW_Widget, mouse_button: c_int) void {
-        const playButtonPressed = @ptrCast(*bool, c.KW_GetWidgetUserData(widget));
-        playButtonPressed.* = true;
+    extern fn onPressed(widget: ?*c.KW_Widget, mouse_button: c_int) void {
+        const btnPressed = @ptrCast(*bool, c.KW_GetWidgetUserData(widget));
+        btnPressed.* = true;
     }
 };

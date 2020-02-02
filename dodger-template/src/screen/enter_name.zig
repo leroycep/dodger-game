@@ -131,10 +131,7 @@ pub const EnterNameScreen = struct {
             const text_len = c.strlen(text);
             ctx.leaderboard.add_score(text[0..text_len], self.score) catch unreachable;
 
-            var scores = std.ArrayList(leaderboard.Score).init(self.allocator);
-            ctx.leaderboard.get_topten_scores(&scores) catch unreachable;
-
-            const newScreen = HighScoresScreen.init(self.allocator, scores) catch unreachable;
+            const newScreen = HighScoresScreen.init(self.allocator, ctx) catch unreachable;
 
             return Transition{ .ReplaceScreen = &newScreen.screen };
         }

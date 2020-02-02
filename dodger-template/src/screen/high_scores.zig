@@ -21,7 +21,7 @@ pub const HighScoresScreen = struct {
 
     const Self = @This();
 
-    pub fn init(allocator: *std.mem.Allocator, scores: ArrayList(Score)) !*Self {
+    pub fn init(allocator: *std.mem.Allocator, ctx: *Context) !*Self {
         const self = try allocator.create(Self);
         self.allocator = allocator;
         self.screen = Screen{
@@ -31,7 +31,9 @@ pub const HighScoresScreen = struct {
             .renderFn = render,
             .deinitFn = deinit,
         };
-        self.scores = scores;
+        self.scores =  ArrayList(Score).init(self.allocator);
+        try ctx.leaderboard.get_topten_scores(&self.scores);
+
 
         self.textBuf = try allocator.alloc(u8, 50);
         self.playAgainPressed = try allocator.create(bool);
@@ -57,7 +59,7 @@ pub const HighScoresScreen = struct {
 
         // Do vertical layout
         var titlerect = c.KW_Rect{ .x = 0, .y = 0, .w = 500, .h = 0 };
-        var scoresRects = [_]c.KW_Rect{c.KW_Rect{ .x = 0, .y = 0, .w = 500, .h = 0 }} ** 10;
+        var scoresRects = [_]c.KW_Rect{c.KW_Rect{ .x = 100, .y = 0, .w = 300, .h = 0 }} ** 10;
         var buttonsrect = c.KW_Rect{ .x = 90, .y = 0, .w = 320, .h = 0 };
 
         var rects = [_]?*c.KW_Rect{null} ** 12;
@@ -98,10 +100,12 @@ pub const HighScoresScreen = struct {
             const scoreRect = c.KW_Rect{ .x = srect.x + splitw, .y = srect.y, .w = srect.w - splitw, .h = srect.h };
 
             const nameText = std.fmt.bufPrint(self.textBuf, "{}\x00", score.name) catch unreachable;
-            _ = c.KW_CreateLabel(self.gui, frame, nameText.ptr, &nameRect);
+            const nameLabel = c.KW_CreateLabel(self.gui, frame, nameText.ptr, &nameRect);
+            c.KW_SetLabelAlignment(nameLabel, c.KW_LABEL_ALIGN_LEFT, 0, c.KW_LABEL_ALIGN_MIDDLE, 0);
 
             const scoreText = std.fmt.bufPrint(self.textBuf, "{d:0.2}\x00", score.score) catch unreachable;
-            _ = c.KW_CreateLabel(self.gui, frame, scoreText.ptr, &scoreRect);
+            const scoreLabel = c.KW_CreateLabel(self.gui, frame, scoreText.ptr, &scoreRect);
+            c.KW_SetLabelAlignment(scoreLabel, c.KW_LABEL_ALIGN_RIGHT, 0, c.KW_LABEL_ALIGN_MIDDLE, 0);
         }
         const mainmenubtn = c.KW_CreateButtonAndLabel(self.gui, btnframe, c"Main Menu", &mainmenurect) orelse unreachable;
         const playagainbtn = c.KW_CreateButtonAndLabel(self.gui, btnframe, c"Play Again", &playagainrect) orelse unreachable;
