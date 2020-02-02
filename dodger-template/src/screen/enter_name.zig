@@ -11,6 +11,7 @@ pub const EnterNameScreen = struct {
     screen: Screen,
     gui: *c.KW_GUI,
     textBuf: []u8,
+    namebox: *c.KW_Widget,
     okayPressed: *bool,
     cancelPressed: *bool,
 
@@ -85,7 +86,7 @@ pub const EnterNameScreen = struct {
         _ = c.KW_CreateLabel(self.gui, frame, c"You Lasted:", &label0rect);
         _ = c.KW_CreateLabel(self.gui, frame, scoreText.ptr, &label1rect);
         _ = c.KW_CreateLabel(self.gui, frame, c"Your Name:", &label2rect);
-        _ = c.KW_CreateEditbox(self.gui, frame, c"", &nameboxrect);
+        self.namebox = c.KW_CreateEditbox(self.gui, frame, c"", &nameboxrect) orelse unreachable;
         var btnframe = c.KW_CreateFrame(self.gui, frame, &buttonsrect);
         const cancelbutton = c.KW_CreateButtonAndLabel(self.gui, btnframe, c"Cancel", &cancelrect) orelse unreachable;
         const okaybutton = c.KW_CreateButtonAndLabel(self.gui, btnframe, c"Okay", &okayrect) orelse unreachable;
@@ -119,8 +120,14 @@ pub const EnterNameScreen = struct {
 
         c.KW_ProcessEvents(self.gui);
 
-        if (self.okayPressed.*) {}
         if (self.cancelPressed.*) {
+            return Transition{ .PopScreen = {} };
+        }
+
+        if (self.okayPressed.*) {
+            const text = c.KW_GetEditboxText(self.namebox) orelse return null;
+            const text_len = c.strlen(text);
+            ctx.leaderboard.add_score(text[0..text_len], self.score) catch unreachable;
             return Transition{ .PopScreen = {} };
         }
 
