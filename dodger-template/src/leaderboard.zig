@@ -4,7 +4,7 @@ usingnamespace @import("constants.zig");
 
 const TB_CREATE_SQL =
     c\\ CREATE TABLE IF NOT EXISTS scores(
-    c\\   id     INT PRIMARY KEY NOT NULL,
+    c\\   id     INT PRIMARY KEY AUTOINCREMENT,
     c\\   name   TEXT NOT NULL,
     c\\   score  REAL NOT NULL );
 ;
@@ -99,6 +99,43 @@ pub const LeaderBoard = struct {
                     return error.SqliteError;
                 },
             }
+        }
+    }
+
+    pub fn add_score(self: *const LeaderBoard, name: []const u8, score: f64) !void {
+        var rc: c_int = undefined;
+        if (name.len > NAME_MAX_LENGTH) {
+            return error.NameTooLong;
+        }
+
+        rc = sqlite3_reset(self.tb_insert_score_stmt);
+        if (rc != SQLITE_OK) {
+            std.debug.warn("sqlite3 error: {}\n", rc);
+            return error.SqliteError;
+        }
+
+        // Workaround Zig translate-c not being able to translate SQLITE_TRANSIENT into an actual value
+        const S: isize = -1;
+        const _SQLITE_TRANSIENT: extern fn (?*c_void) void = @intToPtr(extern fn (?*c_void) void, @bitCast(usize, S));
+
+        rc = sqlite3_bind_text(self.tb_insert_score_stmt, 1, name.ptr, @intCast(c_int, name.len), _SQLITE_TRANSIENT);
+        if (rc != SQLITE_OK) {
+            std.debug.warn("sqlite3 error: {}\n", rc);
+            return error.SqliteError;
+        }
+
+        rc = sqlite3_bind_double(self.tb_insert_score_stmt, 2, score);
+        if (rc != SQLITE_OK) {
+            std.debug.warn("sqlite3 error: {}\n", rc);
+            return error.SqliteError;
+        }
+
+        switch (sqlite3_step(self.tb_insert_score_stmt)) {
+            SQLITE_DONE | SQLITE_OK | SQLITE_ROW => {},
+            else => |val| {
+                std.debug.warn("sqlite3 error: {}\n", val);
+                return error.CantInsertScore;
+            },
         }
     }
 

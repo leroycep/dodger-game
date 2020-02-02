@@ -57,6 +57,7 @@ pub fn main() !void {
     };
     defer ctx.leaderboard.deinit();
 
+    try ctx.leaderboard.add_score("David", 50);
     var scores = std.ArrayList(leaderboard.Score).init(allocator);
     try ctx.leaderboard.get_topten_scores(&scores);
     std.debug.warn("SCORES:\n");
