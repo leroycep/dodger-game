@@ -18,4 +18,5 @@ pub const Enemy = struct {
     breed: *EnemyBreed,
     physics: PhysicsComponent,
     ticksLeftOnFloor: u32,
+    dead: bool,
 };

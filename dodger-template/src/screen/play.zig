@@ -97,7 +97,6 @@ pub const PlayScreen = struct {
             return Transition{ .PopScreen = {} };
         }
 
-
         c.KW_ProcessEvent(self.gui, event.sdl_event);
 
         return null;
@@ -171,21 +170,27 @@ pub const PlayScreen = struct {
         if (self.enemies.toSlice().len < self.maxEnemies) {
             const enemy = self.enemies.addOne() catch unreachable;
             ctx.assets.breeds.get("badguy").?.value.initEnemy(enemy);
+            enemy.dead = true;
         }
 
         for (self.enemies.toSlice()) |*enemy, i| {
             if (enemy.physics.isOnFloor(&self.world)) {
                 if (enemy.ticksLeftOnFloor == 0) {
-                    enemy.physics.pos.y = ENEMY_START_Y;
-                    enemy.physics.pos.x = self.rand.random.float(f32) * (SCREEN_WIDTH - 32) + 32;
-                    enemy.physics.vel = Vec2.zero();
-
-                    const ticks = enemy.breed.ticksOnFloor;
-                    const variation = (ticks * ENEMY_TICKS_ON_FLOOR_VARIATION) / 100;
-                    enemy.ticksLeftOnFloor = self.rand.random.intRangeLessThan(u32, ticks - variation, ticks + variation);
+                    enemy.dead = true;
+                } else {
+                    enemy.ticksLeftOnFloor -= 1;
                 }
+            }
 
-                enemy.ticksLeftOnFloor -= 1;
+            if (enemy.dead) {
+                enemy.physics.pos.y = ENEMY_START_Y;
+                enemy.physics.pos.x = self.rand.random.float(f32) * (SCREEN_WIDTH - 32) + 32;
+                enemy.physics.vel = Vec2.zero();
+
+                const ticks = enemy.breed.ticksOnFloor;
+                const variation = (ticks * ENEMY_TICKS_ON_FLOOR_VARIATION) / 100;
+                enemy.ticksLeftOnFloor = self.rand.random.intRangeLessThan(u32, ticks - variation, ticks + variation);
+                enemy.dead = false;
             }
 
             enemy.physics.applyGravity();
