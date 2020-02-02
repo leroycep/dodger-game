@@ -174,7 +174,7 @@ pub const KW_GPU_RenderDriver = struct {
         const previousstyle = TTF_GetFontStyle(font);
         TTF_SetFontStyle(font, @enumToInt(style));
         const textsurface = TTF_RenderUTF8_Blended(font, text, sdlcolor);
-        const ret = GPU_CopyImageFromSurface(textsurface);
+        const ret = GPU_CopyImageFromSurface(textsurface) orelse return null;
         SDL_FreeSurface(textsurface);
         TTF_SetFontStyle(font, previousstyle);
         return self.wrapImage(ret);
@@ -265,19 +265,21 @@ pub const KW_GPU_RenderDriver = struct {
         // doesn't do anything, needs to be freed from the driver
     }
 
-    extern fn utf8TextSize(driver: ?*KW_RenderDriver, fontOpt: ?*KW_Font, textOpt: ?*const u8, widthOpt: ?*c_uint, heightOpt: ?*c_uint) void {
+    extern fn utf8TextSize(driver: ?*KW_RenderDriver, fontOpt: ?*KW_Font, textOpt: ?[*]const u8, widthOpt: ?*c_uint, heightOpt: ?*c_uint) void {
         const self = @fieldParentPtr(Self, "driver", driver.?);
         const kw_font = fontOpt orelse return;
         const font = castFont(kw_font.font.?);
-        const text = textOpt orelse return;
-        const width = widthOpt orelse return;
-        const height = widthOpt orelse return;
+        const text = @ptrCast([*]const u8, textOpt orelse return);
 
         var w: c_int = undefined;
         var h: c_int = undefined;
         _ = TTF_SizeUTF8(font, text, &w, &h);
-        width.* = @intCast(c_uint, w);
-        height.* = @intCast(c_uint, h);
+        if (widthOpt) |width| {
+            width.* = @intCast(c_uint, w);
+        }
+        if (heightOpt) |height| {
+            height.* = @intCast(c_uint, h);
+        }
     }
 
     extern fn getPixel(driver: ?*KW_RenderDriver, surface: ?*KW_Surface, x: c_uint, y: c_uint) c_uint {
