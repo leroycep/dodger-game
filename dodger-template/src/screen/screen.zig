@@ -15,10 +15,17 @@ pub const Transition = union(TransitionTag) {
 
 pub const ScreenEventTag = enum {
     KeyPressed,
+    Other,
 };
 
-pub const ScreenEvent = union(ScreenEventTag) {
+pub const ScreenEventData = union(ScreenEventTag) {
     KeyPressed: c.SDL_Keycode,
+    Other: void,
+};
+
+pub const ScreenEvent = struct {
+    sdl_event: *c.SDL_Event,
+    type: ScreenEventData,
 };
 
 pub const Screen = struct {

@@ -76,13 +76,26 @@ pub fn main() !void {
 
         const transition = update: {
             while (c.SDL_PollEvent(&e) != 0) {
-                if (e.type == c.SDL_QUIT) {
-                    quit = true;
-                }
-                if (e.type == c.SDL_KEYDOWN) {
-                    if (currentScreen.onEvent(screen.ScreenEvent{ .KeyPressed = e.key.keysym.sym })) |t| {
-                        break :update t;
-                    }
+                switch (e.type) {
+                    c.SDL_QUIT => quit = true,
+                    c.SDL_KEYDOWN => {
+                        const se = screen.ScreenEvent{
+                            .sdl_event = &e,
+                            .type = screen.ScreenEventData{ .KeyPressed = e.key.keysym.sym },
+                        };
+                        if (currentScreen.onEvent(se)) |t| {
+                            break :update t;
+                        }
+                    },
+                    else => {
+                        const se = screen.ScreenEvent{
+                            .sdl_event = &e,
+                            .type = screen.ScreenEventData{ .Other = {} },
+                        };
+                        if (currentScreen.onEvent(se)) |t| {
+                            break :update t;
+                        }
+                    },
                 }
             }
 

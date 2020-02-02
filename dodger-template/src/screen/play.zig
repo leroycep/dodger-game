@@ -93,13 +93,12 @@ pub const PlayScreen = struct {
     fn onEvent(screen: *Screen, event: ScreenEvent) ?Transition {
         const self = @fieldParentPtr(Self, "screen", screen);
 
-        switch (event) {
-            .KeyPressed => |value| {
-                if (value == c.SDLK_ESCAPE) {
-                    return Transition{ .PopScreen = {} };
-                }
-            },
+        if (ScreenEventTag(event.type) == .KeyPressed and event.type.KeyPressed == c.SDLK_ESCAPE) {
+            return Transition{ .PopScreen = {} };
         }
+
+
+        c.KW_ProcessEvent(self.gui, event.sdl_event);
 
         return null;
     }
@@ -204,8 +203,6 @@ pub const PlayScreen = struct {
                 return Transition{ .ReplaceScreen = &newScreen.screen };
             }
         }
-
-        c.KW_ProcessEvents(self.gui);
 
         return null;
     }

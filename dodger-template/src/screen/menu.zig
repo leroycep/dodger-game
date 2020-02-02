@@ -80,21 +80,17 @@ pub const MenuScreen = struct {
     fn onEvent(screen: *Screen, event: ScreenEvent) ?Transition {
         const self = @fieldParentPtr(Self, "screen", screen);
 
-        switch (event) {
-            .KeyPressed => |value| {
-                if (value == c.SDLK_ESCAPE) {
-                    return Transition{ .PopScreen = {} };
-                }
-            },
+        if (ScreenEventTag(event.type) == .KeyPressed and event.type.KeyPressed == c.SDLK_ESCAPE) {
+            return Transition{ .PopScreen = {} };
         }
+
+        c.KW_ProcessEvent(self.gui, event.sdl_event);
 
         return null;
     }
 
     fn update(screen: *Screen, ctx: *Context, keys: [*]const u8) ?Transition {
         const self = @fieldParentPtr(Self, "screen", screen);
-
-        c.KW_ProcessEvents(self.gui);
 
         if (self.playButtonPressed.*) {
             const play_screen = PlayScreen.init(self.allocator) catch unreachable;
