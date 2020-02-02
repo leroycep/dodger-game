@@ -1,4 +1,5 @@
 const std = @import("std");
+const ArrayList = std.ArrayList;
 usingnamespace @import("c.zig");
 usingnamespace @import("constants.zig");
 
@@ -79,20 +80,20 @@ pub const LeaderBoard = struct {
         };
     }
 
-    pub fn get_topten_scores(self: *const LeaderBoard, scores: *std.ArrayList(Score)) !void {
+    pub fn get_topten_scores(self: *const LeaderBoard, scores: *ArrayList(Score)) !void {
         _ = sqlite3_reset(self.tb_select_topten_scores_stmt);
         while (true) {
             const rc = sqlite3_step(self.tb_select_topten_scores_stmt);
             switch (rc) {
                 SQLITE_DONE => break,
                 SQLITE_ROW => {
-                    const name = sqlite3_column_text(self.tb_select_topten_scores_stmt, 0) orelse return error.LoadingResults;
-                    const name_len = strlen(name);
+                    const name: [*]const u8 = sqlite3_column_text(self.tb_select_topten_scores_stmt, 0) orelse return error.LoadingResults;
+                    const name_len = std.math.min(strlen(name), NAME_MAX_LENGTH);
                     const score = sqlite3_column_double(self.tb_select_topten_scores_stmt, 1);
 
                     const score_struct = try scores.addOne();
-                    std.mem.copy(u8, score_struct.buf[0..name_len], name[0..name_len]);
-                    score_struct.name = score_struct.buf[0..name_len];
+                    score_struct.name = ArrayList(u8).init(scores.allocator);
+                    try score_struct.name.appendSlice(name[0..name_len]);
                     score_struct.score = score;
                 },
                 else => {
@@ -148,7 +149,10 @@ pub const LeaderBoard = struct {
 };
 
 pub const Score = struct {
-    buf: [NAME_MAX_LENGTH]u8,
-    name: []u8,
+    name: ArrayList(u8),
     score: f64,
+
+    fn deinit(self: *const Score) void {
+        self.name.deinit();
+    }
 };

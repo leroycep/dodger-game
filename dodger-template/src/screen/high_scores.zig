@@ -31,9 +31,8 @@ pub const HighScoresScreen = struct {
             .renderFn = render,
             .deinitFn = deinit,
         };
-        self.scores =  ArrayList(Score).init(self.allocator);
+        self.scores = ArrayList(Score).init(self.allocator);
         try ctx.leaderboard.get_topten_scores(&self.scores);
-
 
         self.textBuf = try allocator.alloc(u8, 50);
         self.playAgainPressed = try allocator.create(bool);
@@ -91,15 +90,15 @@ pub const HighScoresScreen = struct {
         _ = c.KW_CreateLabel(self.gui, frame, c"HIGH SCORES", &titlerect);
         var btnframe = c.KW_CreateFrame(self.gui, frame, &buttonsrect);
         for (self.scores.toSlice()) |score, idx| {
-            const srect = scoresRects[idx];
-            if (idx > 10) {
+            if (idx >= 10) {
                 break;
             }
+            const srect = scoresRects[idx];
             const splitw = srect.w - 2 * @divFloor(srect.w, 3);
             const nameRect = c.KW_Rect{ .x = srect.x, .y = srect.y, .w = splitw, .h = srect.h };
             const scoreRect = c.KW_Rect{ .x = srect.x + splitw, .y = srect.y, .w = srect.w - splitw, .h = srect.h };
 
-            const nameText = std.fmt.bufPrint(self.textBuf, "{}\x00", score.name) catch unreachable;
+            const nameText = std.fmt.bufPrint(self.textBuf, "{}\x00", score.name.toSlice()) catch unreachable;
             const nameLabel = c.KW_CreateLabel(self.gui, frame, nameText.ptr, &nameRect);
             c.KW_SetLabelAlignment(nameLabel, c.KW_LABEL_ALIGN_LEFT, 0, c.KW_LABEL_ALIGN_MIDDLE, 0);
 
@@ -144,7 +143,8 @@ pub const HighScoresScreen = struct {
         }
 
         if (self.playAgainPressed.*) {
-            return Transition{ .PopScreen = {} };
+            const play_screen = PlayScreen.init(self.allocator) catch unreachable;
+            return Transition{ .ReplaceScreen = &play_screen.screen };
         }
 
         return null;
@@ -162,6 +162,12 @@ pub const HighScoresScreen = struct {
 
     fn deinit(screen: *Screen) void {
         const self = @fieldParentPtr(Self, "screen", screen);
+
+        for (self.scores.toSlice()) |s| {
+            s.deinit();
+        }
+        self.scores.deinit();
+
         self.allocator.destroy(self.mainMenuPressed);
         self.allocator.destroy(self.playAgainPressed);
         self.allocator.destroy(self);
