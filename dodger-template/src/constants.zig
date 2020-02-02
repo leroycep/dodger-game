@@ -16,3 +16,5 @@ pub const ENEMY_TICKS_ON_FLOOR_VARIATION = 20; // Percentage, multiply int by 10
 
 pub const GRAVITY = 2.0;
 pub const MAX_VELOCITY = 10.0;
+
+pub const NAME_MAX_LENGTH = 20;

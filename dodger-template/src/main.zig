@@ -7,7 +7,8 @@ const Context = @import("context.zig").Context;
 const assets = @import("assets.zig");
 const kw_renderdriver = @import("kw_renderdriver_sdl_gpu.zig");
 const audio = @import("audio.zig");
-const LeaderBoard = @import("leaderboard.zig").LeaderBoard;
+const leaderboard = @import("leaderboard.zig");
+const LeaderBoard = leaderboard.LeaderBoard;
 usingnamespace @import("constants.zig");
 
 pub fn main() !void {
@@ -55,6 +56,13 @@ pub fn main() !void {
         .fps = 0,
     };
     defer ctx.leaderboard.deinit();
+
+    var scores = std.ArrayList(leaderboard.Score).init(allocator);
+    try ctx.leaderboard.get_topten_scores(&scores);
+    std.debug.warn("SCORES:\n");
+    for (scores.toSlice()) |s| {
+        std.debug.warn("  {} lasted {d}s\n", s.name, s.score);
+    }
 
     var quit = false;
     var screenStarted = false;

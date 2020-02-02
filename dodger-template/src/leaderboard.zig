@@ -1,5 +1,6 @@
 const std = @import("std");
 usingnamespace @import("c.zig");
+usingnamespace @import("constants.zig");
 
 const TB_CREATE_SQL =
     c\\ CREATE TABLE IF NOT EXISTS scores(
@@ -77,9 +78,39 @@ pub const LeaderBoard = struct {
         };
     }
 
+    pub fn get_topten_scores(self: *const LeaderBoard, scores: *std.ArrayList(Score)) !void {
+        _ = sqlite3_reset(self.tb_select_topten_scores_stmt);
+        while (true) {
+            const rc = sqlite3_step(self.tb_select_topten_scores_stmt);
+            switch (rc) {
+                SQLITE_DONE => break,
+                SQLITE_ROW => {
+                    const name = sqlite3_column_text(self.tb_select_topten_scores_stmt, 0) orelse return error.LoadingResults;
+                    const name_len = strlen(name);
+                    const score = sqlite3_column_double(self.tb_select_topten_scores_stmt, 1);
+
+                    const score_struct = try scores.addOne();
+                    std.mem.copy(u8, score_struct.buf[0..name_len], name[0..name_len]);
+                    score_struct.name = score_struct.buf[0..name_len];
+                    score_struct.score = score;
+                },
+                else => {
+                    std.debug.warn("sqlite3 error: {}\n", rc);
+                    return error.SqliteError;
+                },
+            }
+        }
+    }
+
     pub fn deinit(self: *const LeaderBoard) void {
         _ = sqlite3_finalize(self.tb_select_topten_scores_stmt);
         _ = sqlite3_finalize(self.tb_insert_score_stmt);
         _ = sqlite3_close(self.db);
     }
+};
+
+pub const Score = struct {
+    buf: [NAME_MAX_LENGTH]u8,
+    name: []u8,
+    score: f64,
 };
