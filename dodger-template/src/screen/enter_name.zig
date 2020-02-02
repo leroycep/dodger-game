@@ -3,7 +3,9 @@ const c = @import("../c.zig");
 const sdl = @import("../sdl.zig");
 usingnamespace @import("screen.zig");
 const Context = @import("../context.zig").Context;
-const PlayScreen = @import("play.zig").PlayScreen;
+const leaderboard = @import("../leaderboard.zig");
+const HighScoresScreen = @import("high_scores.zig").HighScoresScreen;
+const ArrayList = std.ArrayList;
 
 pub const EnterNameScreen = struct {
     allocator: *std.mem.Allocator,
@@ -57,7 +59,7 @@ pub const EnterNameScreen = struct {
         var label1rect = c.KW_Rect{ .x = 0, .y = 0, .w = 500, .h = 20 };
         var label2rect = c.KW_Rect{ .x = 0, .y = 0, .w = 500, .h = 20 };
         var nameboxrect = c.KW_Rect{ .x = 100, .y = 0, .w = 300, .h = 20 };
-        var buttonsrect = c.KW_Rect{ .x = 80, .y = 0, .w = 320, .h = 20 };
+        var buttonsrect = c.KW_Rect{ .x = 90, .y = 0, .w = 320, .h = 20 };
 
         var rects = [_]?*c.KW_Rect{ &titlerect, &label0rect, &label1rect, &label2rect, &nameboxrect, &buttonsrect };
         var weights = [_]c_uint{ 4, 2, 2, 2, 4, 6 };
@@ -128,7 +130,13 @@ pub const EnterNameScreen = struct {
             const text = c.KW_GetEditboxText(self.namebox) orelse return null;
             const text_len = c.strlen(text);
             ctx.leaderboard.add_score(text[0..text_len], self.score) catch unreachable;
-            return Transition{ .PopScreen = {} };
+
+            var scores = std.ArrayList(leaderboard.Score).init(self.allocator);
+            ctx.leaderboard.get_topten_scores(&scores) catch unreachable;
+
+            const newScreen = HighScoresScreen.init(self.allocator, scores) catch unreachable;
+
+            return Transition{ .ReplaceScreen = &newScreen.screen };
         }
 
         return null;
