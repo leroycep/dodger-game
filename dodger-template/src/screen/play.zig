@@ -33,6 +33,7 @@ pub const PlayScreen = struct {
     score: f32,
     playerPhysics: physics.PhysicsComponent,
     playerAlive: bool,
+    playerMoving: bool,
     inputMap: InputMap,
     enemies: ArrayList(Enemy),
     maxEnemies: usize,
@@ -61,6 +62,7 @@ pub const PlayScreen = struct {
         self.score = 0;
         self.playerPhysics = physics.PhysicsComponent.init(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 32, 12, 26);
         self.playerAlive = true;
+        self.playerMoving = false;
         self.inputMap = InputMap{
             .left = sdl.scnFromKey(c.SDLK_LEFT),
             .right = sdl.scnFromKey(c.SDLK_RIGHT),
@@ -122,10 +124,34 @@ pub const PlayScreen = struct {
             var goingRight = keys[self.inputMap.right] == 1;
             if (goingLeft and !goingRight) {
                 self.playerPhysics.vel.x = -PLAYER_SPEED;
+
+                if (!self.playerMoving) {
+                    _ = c.libpd_start_message(2);
+                    _ = c.libpd_add_float(0.5);
+                    _ = c.libpd_add_float(250.0);
+                    _ = c.libpd_finish_list(c"rampwalk");
+                }
+                self.playerMoving = true;
             } else if (goingRight and !goingLeft) {
                 self.playerPhysics.vel.x = PLAYER_SPEED;
+
+                if (!self.playerMoving) {
+                    _ = c.libpd_start_message(2);
+                    _ = c.libpd_add_float(0.5);
+                    _ = c.libpd_add_float(250.0);
+                    _ = c.libpd_finish_list(c"rampwalk");
+                }
+                self.playerMoving = true;
             } else {
                 self.playerPhysics.vel.x = 0;
+
+                if (self.playerMoving) {
+                    _ = c.libpd_start_message(2);
+                    _ = c.libpd_add_float(0.0);
+                    _ = c.libpd_add_float(20.0);
+                    _ = c.libpd_finish_list(c"rampwalk");
+                }
+                self.playerMoving = false;
             }
             self.playerPhysics.applyGravity();
             self.playerPhysics.update(&self.world);
@@ -133,6 +159,14 @@ pub const PlayScreen = struct {
             if (keys[self.inputMap.jump] == 1 and self.playerPhysics.isOnFloor(&self.world)) {
                 self.playerPhysics.vel.y += PLAYER_JUMP_VEL;
             }
+        } else {
+            if (self.playerMoving) {
+                _ = c.libpd_start_message(2);
+                _ = c.libpd_add_float(0.0);
+                _ = c.libpd_add_float(20.0);
+                _ = c.libpd_finish_list(c"rampwalk");
+            }
+            self.playerMoving = false;
         }
 
         if (self.enemies.toSlice().len < self.maxEnemies) {
