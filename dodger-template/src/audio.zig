@@ -52,7 +52,7 @@ extern fn init_pd() void {
 
     _ = c.libpd_float(c"walkspeed", 0.0);
     _ = c.libpd_start_message(1);
-    _ = c.libpd_finish_message(c"texture", c"snow");
+    _ = c.libpd_finish_message(c"texture", c"wood");
     _ = c.libpd_float(c"$0-roll", 0.0);
 }
 

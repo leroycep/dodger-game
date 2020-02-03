@@ -11,13 +11,6 @@ pub fn build(b: *Builder) void {
     const file2c_output_dir = fs.path.join(b.allocator, &[_][]const u8{ b.build_root, b.cache_root, FILE2C_OUTPUT_SUBDIR }) catch unreachable;
     const resources = buildResources(b, file2c, file2c_output_dir);
 
-    const libpd_project_path = fs.path.join(b.allocator, &[_][]const u8{ b.build_root, LIBPD_PROJECT_PATH }) catch unreachable;
-    const make_libpd = b.addSystemCommand(&[_][]const u8{"make"});
-    make_libpd.cwd = libpd_project_path;
-
-    const make_libpd_step = b.step("build_libpd", "Build libpd dependency");
-    make_libpd_step.dependOn(&make_libpd.step);
-
     const mode = b.standardReleaseOptions();
     const exe = b.addExecutable("dodger", "src/main.zig");
     exe.setBuildMode(mode);
@@ -31,16 +24,17 @@ pub fn build(b: *Builder) void {
 
     exe.addIncludeDir(PD_INCLUDE_PATH);
     exe.addIncludeDir(LIBPD_INCLUDE_PATH);
-    exe.addObjectFile(LIBPD_LIB_PATH ++ fs.path.sep_str ++ "libpd.so");
-
-    exe.step.dependOn(make_libpd_step);
     exe.step.dependOn(resources);
 
     const lib_cflags = [_][]const u8{};
     const resource_c_path = fs.path.join(b.allocator, &[_][]const u8{ file2c_output_dir, "resources.c" }) catch unreachable;
     exe.addCSourceFile(resource_c_path, lib_cflags);
     inline for (KIWI_SOURCES) |src| {
-        exe.addCSourceFile(KIWI_SOURCE_PATH ++ "/" ++ src, lib_cflags);
+        exe.addCSourceFile(KIWI_SOURCE_PATH ++ fs.path.sep_str ++ src, lib_cflags);
+    }
+    const lib_cflags_pd = [_][]const u8{"-DPD", "-DHAVE_UNISTD_H", "-DUSEAPI_DUMMY"};
+    inline for (LIBPD_SOURCES) |src| {
+        exe.addCSourceFile(LIBPD_PROJECT_PATH ++ fs.path.sep_str ++ src, lib_cflags_pd);
     }
     exe.install();
 
@@ -88,7 +82,7 @@ const KIWI_SOURCES = [_][]const u8{
     "KW_scrollbox_internal.c",
     "KW_scrollbox.c",
     "KW_editbox_internal.c",
-    "utf8.c",
+    // "utf8.c",
     "KW_editbox.c",
     "KW_eventwatcher.c",
     "KW_button.c",
@@ -110,3 +104,82 @@ const LIBPD_PROJECT_PATH = "../lib/libpd";
 const PD_INCLUDE_PATH = LIBPD_PROJECT_PATH ++ fs.path.sep_str ++ "pure-data" ++ fs.path.sep_str ++ "src";
 const LIBPD_INCLUDE_PATH = LIBPD_PROJECT_PATH ++ fs.path.sep_str ++ "libpd_wrapper";
 const LIBPD_LIB_PATH = LIBPD_PROJECT_PATH ++ fs.path.sep_str ++ "libs";
+const LIBPD_SOURCES = [_][]const u8 {
+    "pure-data/src/d_arithmetic.c",
+    "pure-data/src/d_array.c",
+    "pure-data/src/d_ctl.c",
+    "pure-data/src/d_dac.c",
+    "pure-data/src/d_delay.c",
+    "pure-data/src/d_fft.c",
+    "pure-data/src/d_fft_fftsg.c",
+    "pure-data/src/d_filter.c",
+    "pure-data/src/d_global.c",
+    "pure-data/src/d_math.c",
+    "pure-data/src/d_misc.c",
+    "pure-data/src/d_osc.c",
+    "pure-data/src/d_resample.c",
+    "pure-data/src/d_soundfile.c",
+    "pure-data/src/d_ugen.c",
+    "pure-data/src/g_all_guis.c",
+    "pure-data/src/g_array.c",
+    "pure-data/src/g_bang.c",
+    "pure-data/src/g_canvas.c",
+    "pure-data/src/g_clone.c",
+    "pure-data/src/g_editor.c",
+    "pure-data/src/g_editor_extras.c",
+    "pure-data/src/g_graph.c",
+    "pure-data/src/g_guiconnect.c",
+    "pure-data/src/g_hdial.c",
+    "pure-data/src/g_hslider.c",
+    "pure-data/src/g_io.c",
+    "pure-data/src/g_mycanvas.c",
+    "pure-data/src/g_numbox.c",
+    "pure-data/src/g_readwrite.c",
+    "pure-data/src/g_rtext.c",
+    "pure-data/src/g_scalar.c",
+    "pure-data/src/g_template.c",
+    "pure-data/src/g_text.c",
+    "pure-data/src/g_toggle.c",
+    "pure-data/src/g_traversal.c",
+    "pure-data/src/g_undo.c",
+    "pure-data/src/g_vdial.c",
+    "pure-data/src/g_vslider.c",
+    "pure-data/src/g_vumeter.c",
+    "pure-data/src/m_atom.c",
+    "pure-data/src/m_binbuf.c",
+    "pure-data/src/m_class.c",
+    "pure-data/src/m_conf.c",
+    "pure-data/src/m_glob.c",
+    "pure-data/src/m_memory.c",
+    "pure-data/src/m_obj.c",
+    "pure-data/src/m_pd.c",
+    "pure-data/src/m_sched.c",
+    "pure-data/src/s_audio.c",
+    "pure-data/src/s_audio_dummy.c",
+    "pure-data/src/s_inter.c",
+    "pure-data/src/s_loader.c",
+    "pure-data/src/s_main.c",
+    "pure-data/src/s_path.c",
+    "pure-data/src/s_print.c",
+    "pure-data/src/s_utf8.c",
+    "pure-data/src/x_acoustics.c",
+    "pure-data/src/x_arithmetic.c",
+    "pure-data/src/x_array.c",
+    "pure-data/src/x_connective.c",
+    "pure-data/src/x_gui.c",
+    "pure-data/src/x_interface.c",
+    "pure-data/src/x_list.c",
+    "pure-data/src/x_midi.c",
+    "pure-data/src/x_misc.c",
+    "pure-data/src/x_net.c",
+    "pure-data/src/x_scalar.c",
+    "pure-data/src/x_text.c",
+    "pure-data/src/x_time.c",
+    "pure-data/src/x_vexp.c",
+    "pure-data/src/x_vexp_if.c",
+    "pure-data/src/x_vexp_fun.c",
+    "libpd_wrapper/s_libpdmidi.c",
+    "libpd_wrapper/x_libpdreceive.c",
+    "libpd_wrapper/z_hooks.c",
+    "libpd_wrapper/z_libpd.c",
+};
