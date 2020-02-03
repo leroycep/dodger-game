@@ -52,7 +52,7 @@ pub fn main() !void {
     const assetsStruct = &assets.Assets.init(allocator, rootDir);
     try assets.initAssets(assetsStruct);
 
-    audio.init();
+    try audio.init(rootDir);
 
     var ctx = Context{
         .win = win,

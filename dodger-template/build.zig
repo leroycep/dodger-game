@@ -12,6 +12,7 @@ pub fn build(b: *Builder) void {
     const resources = buildResources(b, file2c, file2c_output_dir);
 
     const mode = b.standardReleaseOptions();
+    _ = b.standardTargetOptions(null);
     const exe = b.addExecutable("dodger", "src/main.zig");
     exe.setBuildMode(mode);
     exe.linkSystemLibrary("SDL2");

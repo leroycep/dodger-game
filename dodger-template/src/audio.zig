@@ -7,7 +7,7 @@ usingnamespace @import("constants.zig");
 
 const SAMPLE_RATE = 48000;
 
-pub fn init() void {
+pub fn init(rootDir: []u8) !void {
     var want: c.SDL_AudioSpec = undefined;
     _ = c.SDL_memset(&want, 0, @sizeOf(c.SDL_AudioSpec));
     want.freq = SAMPLE_RATE;
@@ -27,16 +27,6 @@ pub fn init() void {
 
     std.debug.warn("Samples per callback: {}\n", have.samples);
 
-    init_pd();
-
-    c.SDL_PauseAudioDevice(dev, 0);
-}
-
-extern fn pdprint(s: ?[*]const u8) void {
-    _ = std.c.printf(c"%s", s);
-}
-
-extern fn init_pd() void {
     c.libpd_set_printhook(pdprint);
     _ = c.libpd_init();
     _ = c.libpd_init_audio(0, 2, SAMPLE_RATE);
@@ -46,7 +36,10 @@ extern fn init_pd() void {
     c.libpd_add_float(1.0);
     _ = c.libpd_finish_message(c"pd", c"dsp");
 
-    var patch = c.libpd_openfile(c"footstep.pd", c"assets");
+    var buf: [std.fs.MAX_PATH_BYTES]u8 = undefined;
+    const cpath = try std.fmt.bufPrint(&buf, "{}\x00", rootDir);
+
+    var patch = c.libpd_openfile(c"footstep.pd", cpath.ptr);
     var patch_id = c.libpd_getdollarzero(patch);
     std.debug.warn("{}\n", patch_id);
 
@@ -54,6 +47,12 @@ extern fn init_pd() void {
     _ = c.libpd_start_message(1);
     _ = c.libpd_finish_message(c"texture", c"wood");
     _ = c.libpd_float(c"$0-roll", 0.0);
+
+    c.SDL_PauseAudioDevice(dev, 0);
+}
+
+extern fn pdprint(s: ?[*]const u8) void {
+    _ = std.c.printf(c"%s", s);
 }
 
 const inbuf: [64]f32 = undefined;
