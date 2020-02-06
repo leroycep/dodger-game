@@ -18,7 +18,6 @@ pub const EnemyBreed = struct {
         enemy.targetScaleX = 1;
         enemy.previousVel = enemy.physics.vel;
         enemy.scaleY = 1;
-        enemy.targetScaleY = 1;
     }
 };
 
@@ -35,5 +34,4 @@ pub const Enemy = struct {
     previousVel: physics.Vec2,
     landingTween: Tween,
     scaleY: f32 = 1,
-    targetScaleY: f32 = 1,
 };
