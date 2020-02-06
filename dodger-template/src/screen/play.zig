@@ -168,7 +168,7 @@ pub const PlayScreen = struct {
             self.playerMoving = false;
         }
 
-        if (self.enemies.toSlice().len < self.maxEnemies) {
+        if (self.score > ENEMY_START_SCORE and self.enemies.toSlice().len < self.maxEnemies) {
             const enemy = self.enemies.addOne() catch unreachable;
             ctx.assets.breeds.get("badguy").?.value.initEnemy(enemy);
             enemy.dead = true;
