@@ -34,4 +34,6 @@ pub const Enemy = struct {
     previousVel: physics.Vec2,
     landingTween: Tween,
     scaleY: f32 = 1,
+
+    deathTween: Tween,
 };

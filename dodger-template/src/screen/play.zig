@@ -173,6 +173,7 @@ pub const PlayScreen = struct {
             ctx.assets.breeds.get("badguy").?.value.initEnemy(enemy);
             enemy.dead = true;
             enemy.landingTween = Tween.linearLimited(ENEMY_LANDING_TWEEN_DURATION, ENEMY_LANDING_TWEEN_START_SCALE_Y, (1 - ENEMY_LANDING_TWEEN_START_SCALE_Y));
+            enemy.deathTween = Tween.linearLimited(ENEMY_DEATH_TWEEN_DURATION, ENEMY_DEATH_TWEEN_START_SCALE_X, ENEMY_DEATH_TWEEN_CHANGE_SCALE_X);
         }
 
         for (self.enemies.toSlice()) |*enemy, i| {
@@ -219,7 +220,12 @@ pub const PlayScreen = struct {
             }
 
             // Slowly change current scale to target scale
-            enemy.scaleX += (enemy.targetScaleX - enemy.scaleX) * ENEMY_TURN_TWEEN_SPEED;
+            if (enemy.ticksLeftOnFloor > ENEMY_DEATH_TWEEN_DURATION_TICKS) {
+                enemy.scaleX += (enemy.targetScaleX - enemy.scaleX) * ENEMY_TURN_TWEEN_SPEED;
+                enemy.deathTween.reset(now);
+            } else {
+                enemy.scaleX = enemy.deathTween.getValue(now) * enemy.targetScaleX;
+            }
             enemy.scaleY = enemy.landingTween.getValue(now);
         }
 
