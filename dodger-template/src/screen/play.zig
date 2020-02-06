@@ -35,6 +35,7 @@ pub const PlayScreen = struct {
     playerPhysics: physics.PhysicsComponent,
     playerAlive: bool,
     playerMoving: bool,
+    playerScaleX: f32,
     inputMap: InputMap,
     enemies: ArrayList(Enemy),
     maxEnemies: usize,
@@ -89,6 +90,8 @@ pub const PlayScreen = struct {
 
         const fpsrect = c.KW_Rect{ .x = SCREEN_WIDTH - 100, .y = 0, .w = 100, .h = 30 };
         self.fpsLabel = c.KW_CreateLabel(self.gui, frame, c"fps", &fpsrect).?;
+
+        self.playerScaleX = 1;
     }
 
     fn onEvent(screen: *Screen, event: ScreenEvent) ?Transition {
@@ -131,6 +134,7 @@ pub const PlayScreen = struct {
                     _ = c.libpd_finish_list(c"rampwalk");
                 }
                 self.playerMoving = true;
+                self.playerScaleX = -1;
             } else if (goingRight and !goingLeft) {
                 self.playerPhysics.vel.x = PLAYER_SPEED;
 
@@ -141,6 +145,7 @@ pub const PlayScreen = struct {
                     _ = c.libpd_finish_list(c"rampwalk");
                 }
                 self.playerMoving = true;
+                self.playerScaleX = 1;
             } else {
                 self.playerPhysics.vel.x = 0;
 
@@ -244,7 +249,7 @@ pub const PlayScreen = struct {
 
         c.GPU_BlitRect(ctx.assets.tex("background"), null, gpuTarget, null);
         if (self.playerAlive) {
-            c.GPU_Blit(ctx.assets.tex("guy"), null, gpuTarget, self.playerPhysics.pos.x, self.playerPhysics.pos.y);
+            c.GPU_BlitTransform(ctx.assets.tex("guy"), null, gpuTarget, self.playerPhysics.pos.x, self.playerPhysics.pos.y, 0, self.playerScaleX, 1);
         }
         for (self.enemies.toSlice()) |*enemy| {
             // Offset the y position so that the enemy keeps their feet planted on the ground
