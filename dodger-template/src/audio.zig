@@ -39,14 +39,7 @@ pub fn init(rootDir: []u8) !void {
     var buf: [std.fs.MAX_PATH_BYTES]u8 = undefined;
     const cpath = try std.fmt.bufPrint(&buf, "{}\x00", rootDir);
 
-    var patch = c.libpd_openfile(c"footstep.pd", cpath.ptr);
-    var patch_id = c.libpd_getdollarzero(patch);
-    std.debug.warn("{}\n", patch_id);
-
-    _ = c.libpd_float(c"walkspeed", 0.0);
-    _ = c.libpd_start_message(1);
-    _ = c.libpd_finish_message(c"texture", c"wood");
-    _ = c.libpd_float(c"$0-roll", 0.0);
+    var patch = c.libpd_openfile(c"sfx.pd", cpath.ptr);
 
     c.SDL_PauseAudioDevice(dev, 0);
 }

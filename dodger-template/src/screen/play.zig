@@ -124,30 +124,21 @@ pub const PlayScreen = struct {
                 self.playerPhysics.vel.x = -PLAYER_SPEED;
 
                 if (!self.playerMoving) {
-                    _ = c.libpd_start_message(2);
-                    _ = c.libpd_add_float(0.5);
-                    _ = c.libpd_add_float(250.0);
-                    _ = c.libpd_finish_list(c"rampwalk");
+                    _ = c.libpd_float(c"running", 1);
                 }
                 self.playerMoving = true;
             } else if (goingRight and !goingLeft) {
                 self.playerPhysics.vel.x = PLAYER_SPEED;
 
                 if (!self.playerMoving) {
-                    _ = c.libpd_start_message(2);
-                    _ = c.libpd_add_float(0.5);
-                    _ = c.libpd_add_float(250.0);
-                    _ = c.libpd_finish_list(c"rampwalk");
+                    _ = c.libpd_float(c"running", 1);
                 }
                 self.playerMoving = true;
             } else {
                 self.playerPhysics.vel.x = 0;
 
                 if (self.playerMoving) {
-                    _ = c.libpd_start_message(2);
-                    _ = c.libpd_add_float(0.0);
-                    _ = c.libpd_add_float(20.0);
-                    _ = c.libpd_finish_list(c"rampwalk");
+                    _ = c.libpd_float(c"running", 0);
                 }
                 self.playerMoving = false;
             }
@@ -159,10 +150,7 @@ pub const PlayScreen = struct {
             }
         } else {
             if (self.playerMoving) {
-                _ = c.libpd_start_message(2);
-                _ = c.libpd_add_float(0.0);
-                _ = c.libpd_add_float(20.0);
-                _ = c.libpd_finish_list(c"rampwalk");
+                _ = c.libpd_float(c"running", 0);
             }
             self.playerMoving = false;
         }
