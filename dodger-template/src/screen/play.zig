@@ -203,6 +203,7 @@ pub const PlayScreen = struct {
             // Squash the enemy on extereme y velocity changes
             if (enemy.physics.vel.y < enemy.previousVel.y) {
                 enemy.landingTween.reset(now);
+                _ = c.libpd_bang(c"land");
             }
 
             // Make the enemies face the player
