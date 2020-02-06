@@ -12,6 +12,7 @@ const physics = @import("../game/physics.zig");
 const Vec2 = physics.Vec2;
 const World = @import("../game/world.zig").World;
 const EnterNameScreen = @import("enter_name.zig").EnterNameScreen;
+const Tween = @import("../tween.zig").Tween;
 
 const InputMap = struct {
     left: usize,
@@ -34,6 +35,7 @@ pub const PlayScreen = struct {
     playerPhysics: physics.PhysicsComponent,
     playerAlive: bool,
     playerMoving: bool,
+    playerScaleX: f32,
     inputMap: InputMap,
     enemies: ArrayList(Enemy),
     maxEnemies: usize,
@@ -88,6 +90,8 @@ pub const PlayScreen = struct {
 
         const fpsrect = c.KW_Rect{ .x = SCREEN_WIDTH - 100, .y = 0, .w = 100, .h = 30 };
         self.fpsLabel = c.KW_CreateLabel(self.gui, frame, c"fps", &fpsrect).?;
+
+        self.playerScaleX = 1;
     }
 
     fn onEvent(screen: *Screen, event: ScreenEvent) ?Transition {
@@ -127,6 +131,7 @@ pub const PlayScreen = struct {
                     _ = c.libpd_float(c"running", 1);
                 }
                 self.playerMoving = true;
+                self.playerScaleX = -1;
             } else if (goingRight and !goingLeft) {
                 self.playerPhysics.vel.x = PLAYER_SPEED;
 
@@ -134,6 +139,7 @@ pub const PlayScreen = struct {
                     _ = c.libpd_float(c"running", 1);
                 }
                 self.playerMoving = true;
+                self.playerScaleX = 1;
             } else {
                 self.playerPhysics.vel.x = 0;
 
@@ -155,10 +161,12 @@ pub const PlayScreen = struct {
             self.playerMoving = false;
         }
 
-        if (self.enemies.toSlice().len < self.maxEnemies) {
+        if (self.score > ENEMY_START_SCORE and self.enemies.toSlice().len < self.maxEnemies) {
             const enemy = self.enemies.addOne() catch unreachable;
             ctx.assets.breeds.get("badguy").?.value.initEnemy(enemy);
             enemy.dead = true;
+            enemy.landingTween = Tween.linearLimited(ENEMY_LANDING_TWEEN_DURATION, ENEMY_LANDING_TWEEN_START_SCALE_Y, (1 - ENEMY_LANDING_TWEEN_START_SCALE_Y));
+            enemy.deathTween = Tween.linearLimited(ENEMY_DEATH_TWEEN_DURATION, ENEMY_DEATH_TWEEN_START_SCALE_X, ENEMY_DEATH_TWEEN_CHANGE_SCALE_X);
         }
 
         for (self.enemies.toSlice()) |*enemy, i| {
@@ -181,6 +189,7 @@ pub const PlayScreen = struct {
                 enemy.dead = false;
             }
 
+            enemy.previousVel = enemy.physics.vel;
             enemy.physics.applyGravity();
             enemy.physics.update(&self.world);
 
@@ -188,6 +197,29 @@ pub const PlayScreen = struct {
                 self.playerAlive = false;
                 self.death_start = std.time.milliTimestamp();
             }
+
+            const now = std.time.milliTimestamp();
+
+            // Squash the enemy on extereme y velocity changes
+            if (enemy.physics.vel.y < enemy.previousVel.y) {
+                enemy.landingTween.reset(now);
+            }
+
+            // Make the enemies face the player
+            if (self.playerPhysics.pos.x < enemy.physics.pos.x) {
+                enemy.targetScaleX = 1;
+            } else if (self.playerPhysics.pos.x > enemy.physics.pos.x) {
+                enemy.targetScaleX = -1;
+            }
+
+            // Slowly change current scale to target scale
+            if (enemy.ticksLeftOnFloor > ENEMY_DEATH_TWEEN_DURATION_TICKS) {
+                enemy.scaleX += (enemy.targetScaleX - enemy.scaleX) * ENEMY_TURN_TWEEN_SPEED;
+                enemy.deathTween.reset(now);
+            } else {
+                enemy.scaleX = enemy.deathTween.getValue(now) * enemy.targetScaleX;
+            }
+            enemy.scaleY = enemy.landingTween.getValue(now);
         }
 
         if (!self.playerAlive) {
@@ -205,10 +237,12 @@ pub const PlayScreen = struct {
 
         c.GPU_BlitRect(ctx.assets.tex("background"), null, gpuTarget, null);
         if (self.playerAlive) {
-            c.GPU_Blit(ctx.assets.tex("guy"), null, gpuTarget, self.playerPhysics.pos.x, self.playerPhysics.pos.y);
+            c.GPU_BlitTransform(ctx.assets.tex("guy"), null, gpuTarget, self.playerPhysics.pos.x, self.playerPhysics.pos.y, 0, self.playerScaleX, 1);
         }
         for (self.enemies.toSlice()) |*enemy| {
-            c.GPU_Blit(enemy.breed.texture, null, gpuTarget, enemy.physics.pos.x, enemy.physics.pos.y);
+            // Offset the y position so that the enemy keeps their feet planted on the ground
+            const renderY = enemy.physics.pos.y + ((1 - enemy.scaleY) / 2) * @intToFloat(f32, enemy.breed.texture.h);
+            c.GPU_BlitTransform(enemy.breed.texture, null, gpuTarget, enemy.physics.pos.x, renderY, 0, enemy.scaleX, enemy.scaleY);
         }
 
         c.KW_Paint(self.gui);
