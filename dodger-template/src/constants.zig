@@ -16,6 +16,8 @@ pub const INITIAL_MAX_ENEMIES = 10;
 pub const ENEMY_TICKS_ON_FLOOR = 30;
 pub const ENEMY_TICKS_ON_FLOOR_VARIATION = 20; // Percentage, multiply int by 100 then divide by this, then divide by 100
 pub const ENEMY_TURN_TWEEN_SPEED = 0.5;
+pub const ENEMY_LANDING_TWEEN_DURATION = 100;
+pub const ENEMY_LANDING_TWEEN_START_SCALE_Y = 0.1;
 
 pub const GRAVITY = 2.0;
 pub const MAX_VELOCITY = 10.0;

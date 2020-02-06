@@ -193,6 +193,22 @@ pub const PlayScreen = struct {
                 enemy.dead = false;
             }
 
+            enemy.previousVel = enemy.physics.vel;
+            enemy.physics.applyGravity();
+            enemy.physics.update(&self.world);
+
+            if (enemy.physics.intersects(&self.playerPhysics) and self.playerAlive) {
+                self.playerAlive = false;
+                self.death_start = std.time.milliTimestamp();
+            }
+
+            const now = std.time.milliTimestamp();
+
+            // Squash the enemy on extereme y velocity changes
+            if (enemy.physics.vel.y < enemy.previousVel.y) {
+                enemy.msTweenStart = now;
+            }
+
             // Make the enemies face the player
             if (self.playerPhysics.pos.x < enemy.physics.pos.x) {
                 enemy.targetScaleX = 1;
@@ -202,13 +218,9 @@ pub const PlayScreen = struct {
 
             // Slowly change current scale to target scale
             enemy.scaleX += (enemy.targetScaleX - enemy.scaleX) * ENEMY_TURN_TWEEN_SPEED;
-
-            enemy.physics.applyGravity();
-            enemy.physics.update(&self.world);
-
-            if (enemy.physics.intersects(&self.playerPhysics) and self.playerAlive) {
-                self.playerAlive = false;
-                self.death_start = std.time.milliTimestamp();
+            if (enemy.msTweenStart < now) {
+                const timeFloat = @intToFloat(f32, now - enemy.msTweenStart);
+                enemy.scaleY = (1 - ENEMY_LANDING_TWEEN_START_SCALE_Y) * std.math.min(timeFloat / ENEMY_LANDING_TWEEN_DURATION, 1) + ENEMY_LANDING_TWEEN_START_SCALE_Y;
             }
         }
 
@@ -230,7 +242,9 @@ pub const PlayScreen = struct {
             c.GPU_Blit(ctx.assets.tex("guy"), null, gpuTarget, self.playerPhysics.pos.x, self.playerPhysics.pos.y);
         }
         for (self.enemies.toSlice()) |*enemy| {
-            c.GPU_BlitTransform(enemy.breed.texture, null, gpuTarget, enemy.physics.pos.x, enemy.physics.pos.y, 0, enemy.scaleX, 1);
+            // Offset the y position so that the enemy keeps their feet planted on the ground
+            const renderY = enemy.physics.pos.y + ((1 - enemy.scaleY) / 2) * @intToFloat(f32, enemy.breed.texture.h);
+            c.GPU_BlitTransform(enemy.breed.texture, null, gpuTarget, enemy.physics.pos.x, renderY, 0, enemy.scaleX, enemy.scaleY);
         }
 
         c.KW_Paint(self.gui);
