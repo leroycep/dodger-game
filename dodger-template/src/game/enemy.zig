@@ -19,4 +19,8 @@ pub const Enemy = struct {
     physics: PhysicsComponent,
     ticksLeftOnFloor: u32,
     dead: bool,
+
+    // Rendering stuff
+    scaleX: f32 = 1,
+    targetScaleX: f32 = 1,
 };

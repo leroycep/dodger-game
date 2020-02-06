@@ -193,6 +193,16 @@ pub const PlayScreen = struct {
                 enemy.dead = false;
             }
 
+            // Make the enemies face the player
+            if (self.playerPhysics.pos.x < enemy.physics.pos.x) {
+                enemy.targetScaleX = 1;
+            } else if (self.playerPhysics.pos.x > enemy.physics.pos.x) {
+                enemy.targetScaleX = -1;
+            }
+
+            // Slowly change current scale to target scale
+            enemy.scaleX += (enemy.targetScaleX - enemy.scaleX) * ENEMY_TURN_TWEEN_SPEED;
+
             enemy.physics.applyGravity();
             enemy.physics.update(&self.world);
 
@@ -220,7 +230,7 @@ pub const PlayScreen = struct {
             c.GPU_Blit(ctx.assets.tex("guy"), null, gpuTarget, self.playerPhysics.pos.x, self.playerPhysics.pos.y);
         }
         for (self.enemies.toSlice()) |*enemy| {
-            c.GPU_Blit(enemy.breed.texture, null, gpuTarget, enemy.physics.pos.x, enemy.physics.pos.y);
+            c.GPU_BlitTransform(enemy.breed.texture, null, gpuTarget, enemy.physics.pos.x, enemy.physics.pos.y, 0, enemy.scaleX, 1);
         }
 
         c.KW_Paint(self.gui);
