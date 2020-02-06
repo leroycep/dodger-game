@@ -1,6 +1,7 @@
 const c = @import("../c.zig");
 const physics = @import("physics.zig");
 const PhysicsComponent = physics.PhysicsComponent;
+const Tween = @import("../tween.zig").Tween;
 
 pub const EnemyBreed = struct {
     texture: *c.GPU_Image,
@@ -32,7 +33,7 @@ pub const Enemy = struct {
     targetScaleX: f32 = 1,
 
     previousVel: physics.Vec2,
-    msTweenStart: u64 = 0,
+    landingTween: Tween,
     scaleY: f32 = 1,
     targetScaleY: f32 = 1,
 };

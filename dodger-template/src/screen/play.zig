@@ -12,6 +12,7 @@ const physics = @import("../game/physics.zig");
 const Vec2 = physics.Vec2;
 const World = @import("../game/world.zig").World;
 const EnterNameScreen = @import("enter_name.zig").EnterNameScreen;
+const Tween = @import("../tween.zig").Tween;
 
 const InputMap = struct {
     left: usize,
@@ -171,6 +172,7 @@ pub const PlayScreen = struct {
             const enemy = self.enemies.addOne() catch unreachable;
             ctx.assets.breeds.get("badguy").?.value.initEnemy(enemy);
             enemy.dead = true;
+            enemy.landingTween = Tween.linearLimited(ENEMY_LANDING_TWEEN_DURATION, ENEMY_LANDING_TWEEN_START_SCALE_Y, (1 - ENEMY_LANDING_TWEEN_START_SCALE_Y));
         }
 
         for (self.enemies.toSlice()) |*enemy, i| {
@@ -206,7 +208,7 @@ pub const PlayScreen = struct {
 
             // Squash the enemy on extereme y velocity changes
             if (enemy.physics.vel.y < enemy.previousVel.y) {
-                enemy.msTweenStart = now;
+                enemy.landingTween.reset(now);
             }
 
             // Make the enemies face the player
@@ -218,10 +220,7 @@ pub const PlayScreen = struct {
 
             // Slowly change current scale to target scale
             enemy.scaleX += (enemy.targetScaleX - enemy.scaleX) * ENEMY_TURN_TWEEN_SPEED;
-            if (enemy.msTweenStart < now) {
-                const timeFloat = @intToFloat(f32, now - enemy.msTweenStart);
-                enemy.scaleY = (1 - ENEMY_LANDING_TWEEN_START_SCALE_Y) * std.math.min(timeFloat / ENEMY_LANDING_TWEEN_DURATION, 1) + ENEMY_LANDING_TWEEN_START_SCALE_Y;
-            }
+            enemy.scaleY = enemy.landingTween.getValue(now);
         }
 
         if (!self.playerAlive) {
