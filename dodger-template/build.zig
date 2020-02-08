@@ -25,6 +25,9 @@ pub fn build(b: *Builder) void {
 
     exe.addIncludeDir(PD_INCLUDE_PATH);
     exe.addIncludeDir(LIBPD_INCLUDE_PATH);
+
+    exe.addIncludeDir(PD_CYCLONE_INCLUDE_PATH);
+    exe.addIncludeDir("src/c");
     exe.step.dependOn(resources);
 
     const lib_cflags = [_][]const u8{};
@@ -36,6 +39,10 @@ pub fn build(b: *Builder) void {
     const lib_cflags_pd = [_][]const u8{"-DPD", "-DHAVE_UNISTD_H", "-DUSEAPI_DUMMY"};
     inline for (LIBPD_SOURCES) |src| {
         exe.addCSourceFile(LIBPD_PROJECT_PATH ++ fs.path.sep_str ++ src, lib_cflags_pd);
+    }
+    const lib_cflags_pd_cyclone = [_][]const u8{};
+    inline for (PD_CYCLONE_SOURCES) |src| {
+        exe.addCSourceFile(PD_CYCLONE_PROJECT_PATH ++ fs.path.sep_str ++ src, lib_cflags_pd_cyclone);
     }
     exe.install();
 
@@ -183,4 +190,14 @@ const LIBPD_SOURCES = [_][]const u8 {
     "libpd_wrapper/x_libpdreceive.c",
     "libpd_wrapper/z_hooks.c",
     "libpd_wrapper/z_libpd.c",
+};
+
+const PD_CYCLONE_PROJECT_PATH = "../lib/pd-cyclone";
+const PD_CYCLONE_INCLUDE_PATH = PD_CYCLONE_PROJECT_PATH ++ fs.path.sep_str ++ "shared";
+const PD_CYCLONE_SOURCES = [_][]const u8 {
+    "cyclone_objects/binaries/control/seq.c",
+    "cyclone_objects/binaries/control/midiparse.c",
+    "shared/common/file.c",
+    "shared/common/grow.c",
+    "shared/control/mifi.c",
 };

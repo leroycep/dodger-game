@@ -29,8 +29,9 @@ pub fn init(rootDir: []u8) !void {
 
     c.libpd_set_printhook(pdprint);
     _ = c.libpd_init();
+    c.seq_setup();
+    c.midiparse_setup();
     _ = c.libpd_init_audio(0, 2, SAMPLE_RATE);
-    c.libpd_set_verbose(0);
 
     _ = c.libpd_start_message(1);
     c.libpd_add_float(1.0);
@@ -40,6 +41,10 @@ pub fn init(rootDir: []u8) !void {
     const cpath = try std.fmt.bufPrint(&buf, "{}\x00", rootDir);
 
     var patch = c.libpd_openfile(c"sfx.pd", cpath.ptr);
+    _ = c.libpd_openfile(c"music.pd", cpath.ptr);
+
+    _ = c.libpd_bang(c"loadmusic");
+    _ = c.libpd_bang(c"music");
 
     c.SDL_PauseAudioDevice(dev, 0);
 }

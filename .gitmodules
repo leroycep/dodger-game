@@ -4,3 +4,6 @@
 [submodule "lib/libpd"]
 	path = lib/libpd
 	url = git@github.com:libpd/libpd.git
+[submodule "lib/pd-cyclone"]
+	path = lib/pd-cyclone
+	url = git@github.com:porres/pd-cyclone.git

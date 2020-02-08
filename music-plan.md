@@ -10,9 +10,10 @@ descending upon him. He must dodge for as long as possible.
 
 * Origin of Inspiration: Scene
 * Length: 30 seconds
+* 180 bpm 4/4 time
 * Loopable
 * 4 synthesizers as instrumets:
-  * Melody on square
+  * Melody on 25% square
   * Harmony on square
   * Bass on triangle
   * Percussion on noise
