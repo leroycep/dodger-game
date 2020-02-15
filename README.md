@@ -1,5 +1,7 @@
 # Dodger
 
+![enemies fall from the sky to prey on our unsuspecting protagonist](screenshot.png)
+
 Dodge the enemies as they fall from the sky! Who can last the longest?
 
 
