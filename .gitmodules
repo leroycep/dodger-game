@@ -1,9 +1,9 @@
 [submodule "lib/kiwi"]
 	path = lib/kiwi
-	url = git@github.com:Geemili/kiwi.git
+	url = https://github.com/Geemili/kiwi.git
 [submodule "lib/libpd"]
 	path = lib/libpd
-	url = git@github.com:libpd/libpd.git
+	url = https://github.com/libpd/libpd.git
 [submodule "lib/pd-cyclone"]
 	path = lib/pd-cyclone
-	url = git@github.com:porres/pd-cyclone.git
+	url = https://github.com/porres/pd-cyclone.git
