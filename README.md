@@ -22,6 +22,9 @@ Building:
 ``` sh
 zig build run
 ```
+
+Dodger was built using zig `0.5.0`.
+
 ## About
 
 This was a small project made to learn zig, sqlite, libpd, and game programming 
