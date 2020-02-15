@@ -82,7 +82,7 @@ fn buildResources(b: *Builder, file2c: *LibExeObjStep, output_dir: []const u8) *
     return build_resources_step;
 }
 
-const KIWI_PROJECT_PATH = "../lib/kiwi";
+const KIWI_PROJECT_PATH = "lib/kiwi";
 const KIWI_SOURCE_PATH = KIWI_PROJECT_PATH ++ fs.path.sep_str ++ "src";
 const FILE2C_SOURCE = "file2c.c";
 const FILE2C_OUTPUT_SUBDIR = "file2c_generated_code";
@@ -108,7 +108,7 @@ const KIWI_SOURCES = [_][]const u8{
     "KW_checkbox.c",
 };
 
-const LIBPD_PROJECT_PATH = "../lib/libpd";
+const LIBPD_PROJECT_PATH = "lib/libpd";
 const PD_INCLUDE_PATH = LIBPD_PROJECT_PATH ++ fs.path.sep_str ++ "pure-data" ++ fs.path.sep_str ++ "src";
 const LIBPD_INCLUDE_PATH = LIBPD_PROJECT_PATH ++ fs.path.sep_str ++ "libpd_wrapper";
 const LIBPD_LIB_PATH = LIBPD_PROJECT_PATH ++ fs.path.sep_str ++ "libs";
@@ -192,7 +192,7 @@ const LIBPD_SOURCES = [_][]const u8 {
     "libpd_wrapper/z_libpd.c",
 };
 
-const PD_CYCLONE_PROJECT_PATH = "../lib/pd-cyclone";
+const PD_CYCLONE_PROJECT_PATH = "lib/pd-cyclone";
 const PD_CYCLONE_INCLUDE_PATH = PD_CYCLONE_PROJECT_PATH ++ fs.path.sep_str ++ "shared";
 const PD_CYCLONE_SOURCES = [_][]const u8 {
     "cyclone_objects/binaries/control/seq.c",
