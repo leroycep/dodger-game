@@ -92,6 +92,9 @@ pub const PlayScreen = struct {
         self.fpsLabel = c.KW_CreateLabel(self.gui, frame, c"fps", &fpsrect).?;
 
         self.playerScaleX = 1;
+
+        _ = c.libpd_bang(c"music");
+        _ = c.libpd_float(c"musicloop", 1);
     }
 
     fn onEvent(screen: *Screen, event: ScreenEvent) ?Transition {
@@ -159,6 +162,7 @@ pub const PlayScreen = struct {
                 _ = c.libpd_float(c"running", 0);
             }
             self.playerMoving = false;
+            _ = c.libpd_float(c"musicloop", 0);
         }
 
         if (self.score > ENEMY_START_SCORE and self.enemies.toSlice().len < self.maxEnemies) {

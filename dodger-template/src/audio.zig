@@ -44,7 +44,6 @@ pub fn init(rootDir: []u8) !void {
     _ = c.libpd_openfile(c"music.pd", cpath.ptr);
 
     _ = c.libpd_bang(c"loadmusic");
-    _ = c.libpd_bang(c"music");
 
     c.SDL_PauseAudioDevice(dev, 0);
 }
